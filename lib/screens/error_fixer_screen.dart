@@ -40,25 +40,22 @@ class _ErrorFixerScreenState extends State<ErrorFixerScreen> {
 
     setState(() { _isLoading = true; _hasResult = false; });
 
-    final prompt = '''Yeh code mein error hai, fix karo:
+    final prompt = '''Code mein error hai, fix karo:
 
 CODE:
 $code
 
-ERROR MESSAGE:
+ERROR:
 $error
 
-${_screenshot != null ? 'User ne error ka screenshot bhi diya hai.' : ''}
-
-Karo:
-1. Error ka karan batao (Hindi/English)
+1. Error ka karan batao
 2. Fixed complete code do
 3. Kya change kiya batao''';
 
     try {
       final result = await AIService.sendMessage(
         userMessage: prompt,
-        systemPrompt: 'Aap ek expert debugger ho. Code errors dhundho aur fix karo. Clear explanation do.',
+        systemPrompt: 'Aap expert debugger ho. Code fix karo aur clear explanation do Hindi/English mein.',
         maxTokens: 4096,
       );
       setState(() {
@@ -85,16 +82,16 @@ Karo:
           children: [
             Icon(Icons.bug_report, color: Color(0xFF6C63FF)),
             SizedBox(width: 10),
-            Text('Error Fixer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Error Fixer',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Screenshot Upload
             GestureDetector(
               onTap: _pickScreenshot,
               child: Container(
@@ -106,7 +103,6 @@ Karo:
                     color: _screenshot != null
                         ? const Color(0xFF6C63FF)
                         : const Color(0xFF6C63FF).withOpacity(0.3),
-                    style: BorderStyle.solid,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -119,120 +115,136 @@ Karo:
                     : const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_photo_alternate, color: Color(0xFF6C63FF), size: 32),
+                          Icon(Icons.add_photo_alternate,
+                              color: Color(0xFF6C63FF), size: 32),
                           SizedBox(height: 8),
-                          Text('Error Screenshot Upload Karo', style: TextStyle(color: Colors.grey)),
+                          Text('Error Screenshot Upload Karo',
+                              style: TextStyle(color: Colors.grey)),
                         ],
                       ),
               ),
             ),
             const SizedBox(height: 12),
-
-            // Error Message
             TextField(
               controller: _errorController,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: 'Error message paste karo...',
-                hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                hintStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: const Color(0xFF12122A),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  borderSide:
+                      BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF6C63FF)),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-
-            // Code Input
             TextField(
               controller: _codeController,
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'monospace'),
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 12, fontFamily: 'monospace'),
               maxLines: 6,
               decoration: InputDecoration(
                 hintText: 'Apna code paste karo jisme error hai...',
-                hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                hintStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: const Color(0xFF12122A),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  borderSide:
+                      BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF6C63FF)),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-
-            // Fix Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _fixError,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            GestureDetector(
+              onTap: _isLoading ? null : _fixError,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: _isLoading
-                        ? const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
-                              SizedBox(width: 10),
-                              Text('AI Fix Kar Raha Hai...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ],
-                          )
-                        : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.auto_fix_high, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Error Fix Karo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                            ],
-                          ),
-                  ),
+                child: Center(
+                  child: _isLoading
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2)),
+                            SizedBox(width: 10),
+                            Text('AI Fix Kar Raha Hai...',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.auto_fix_high, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Error Fix Karo',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16)),
+                          ],
+                        ),
                 ),
               ),
             ),
-
             if (_hasResult) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Text('Fixed Code:', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
+                  const Text('Fixed Code:',
+                      style: TextStyle(
+                          color: Colors.white70, fontWeight: FontWeight.bold)),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.copy, color: Color(0xFF6C63FF)),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: _fixedCode));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copy ho gaya!')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Copy ho gaya!')));
                     },
                   ),
                 ],
               ),
               Container(
                 width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 400),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0D0D1A),
-                  border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  border: Border.all(
+                      color: const Color(0xFF6C63FF).withOpacity(0.3)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  _fixedCode,
-                  style: const TextStyle(color: Color(0xFF7FFF7F), fontSize: 12, height: 1.5),
+                child: SingleChildScrollView(
+                  child: Text(
+                    _fixedCode,
+                    style: const TextStyle(
+                        color: Color(0xFF7FFF7F), fontSize: 12, height: 1.5),
+                  ),
                 ),
               ),
             ],
