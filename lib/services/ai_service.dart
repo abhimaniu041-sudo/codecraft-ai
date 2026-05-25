@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AIService {
-  static const String _apiKey = 'apni_groq_key_yahan';
+  static const String _apiKey = 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;
   static const String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'llama3-70b-8192';
 
