@@ -2,16 +2,23 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AIService {
-  static const String _apiKey = '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';
+  static const String _apiKey = 'apni_groq_key_yahan';
   static const String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'llama-3.3-70b-versatile';
 
   static Future<String> sendMessage({
     required String userMessage,
     required String systemPrompt,
+    List<Map<String, String>> history = const [],
     int maxTokens = 4096,
   }) async {
     try {
+      final List<Map<String, dynamic>> messages = [
+        {'role': 'system', 'content': systemPrompt},
+        ...history,
+        {'role': 'user', 'content': userMessage},
+      ];
+
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
@@ -20,10 +27,7 @@ class AIService {
         },
         body: jsonEncode({
           'model': _model,
-          'messages': [
-            {'role': 'system', 'content': systemPrompt},
-            {'role': 'user', 'content': userMessage},
-          ],
+          'messages': messages,
           'max_tokens': maxTokens,
           'temperature': 0.7,
         }),
@@ -37,7 +41,7 @@ class AIService {
         throw Exception(err['error']['message'] ?? 'API Error');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      throw Exception('$e');
     }
   }
 }
