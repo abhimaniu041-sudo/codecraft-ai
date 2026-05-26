@@ -451,10 +451,121 @@ body { background:#000; font-family: 'Segoe UI', sans-serif; overflow:hidden; wi
 }
 @keyframes float { from { transform: translateY(0px); } to { transform: translateY(-15px); } }
 
+./* ===== ENHANCED CHARACTER ANIMATIONS ===== */
 .char-body {
-  font-size: clamp(50px, 12vw, 90px);
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+  font-size: clamp(55px, 13vw, 95px);
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9));
   transition: transform 0.3s;
+  display: inline-block;
+}
+
+/* Idle breathing */
+.animate-idle .char-body {
+  animation: breathe 3s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100% { transform: scaleY(1) translateY(0); }
+  50% { transform: scaleY(1.04) translateY(-4px); }
+}
+
+/* Talking - mouth open close effect */
+.animate-talking .char-body {
+  animation: talk 0.4s ease-in-out infinite alternate;
+}
+@keyframes talk {
+  from { transform: scaleX(1) translateY(0); filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)) brightness(1); }
+  to { transform: scaleX(1.04) translateY(-3px); filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)) brightness(1.1); }
+}
+
+/* Fighting */
+.animate-fighting .char-body {
+  animation: fight 0.25s ease-in-out infinite alternate;
+}
+@keyframes fight {
+  from { transform: rotate(-15deg) translateX(-5px) scale(1.05); }
+  to { transform: rotate(15deg) translateX(5px) scale(0.95); }
+}
+
+/* Running */
+.animate-running .char-body {
+  animation: runAnim 0.35s ease-in-out infinite alternate;
+}
+@keyframes runAnim {
+  from { transform: translateX(-8px) rotate(-8deg) scaleY(0.95); }
+  to { transform: translateX(8px) rotate(8deg) scaleY(1.05); }
+}
+
+/* Jumping */
+.animate-jumping .char-body {
+  animation: jumpAnim 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+@keyframes jumpAnim {
+  0%,100% { transform: translateY(0) scaleY(1); }
+  30% { transform: translateY(-40px) scaleY(1.1) rotate(5deg); }
+  60% { transform: translateY(-45px) scaleY(1.05) rotate(-5deg); }
+}
+
+/* Sad */
+.animate-sad .char-body {
+  animation: sadAnim 2s ease-in-out infinite;
+}
+@keyframes sadAnim {
+  0%,100% { transform: translateY(0) rotate(-3deg); filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)) saturate(0.7); }
+  50% { transform: translateY(5px) rotate(3deg); filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)) saturate(0.5); }
+}
+
+/* Happy */
+.animate-happy .char-body {
+  animation: happyAnim 0.5s ease-in-out infinite alternate;
+}
+@keyframes happyAnim {
+  from { transform: translateY(0) rotate(-5deg) scale(1); filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)) brightness(1.1); }
+  to { transform: translateY(-10px) rotate(5deg) scale(1.08); filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)) brightness(1.3); }
+}
+
+/* Angry */
+.animate-angry .char-body {
+  animation: angryAnim 0.2s ease-in-out infinite alternate;
+}
+@keyframes angryAnim {
+  from { transform: translateX(-3px) rotate(-3deg); filter: drop-shadow(0 0 15px rgba(255,50,50,0.9)) brightness(1.1); }
+  to { transform: translateX(3px) rotate(3deg); filter: drop-shadow(0 0 20px rgba(255,0,0,1)) brightness(1.2); }
+}
+
+/* Casting magic */
+.animate-casting .char-body {
+  animation: castAnim 1.5s ease-in-out infinite;
+}
+@keyframes castAnim {
+  0%,100% { transform: scale(1) rotate(0); filter: drop-shadow(0 0 8px gold) brightness(1); }
+  25% { transform: scale(1.1) rotate(-10deg); filter: drop-shadow(0 0 25px gold) brightness(1.4); }
+  75% { transform: scale(1.05) rotate(10deg); filter: drop-shadow(0 0 20px #FFD700) brightness(1.3); }
+}
+
+/* Defending */
+.animate-defending .char-body {
+  animation: defendAnim 1s ease-in-out infinite alternate;
+}
+@keyframes defendAnim {
+  from { transform: scaleX(0.9) translateY(0); filter: drop-shadow(0 0 10px rgba(100,150,255,0.8)); }
+  to { transform: scaleX(1.05) translateY(-5px); filter: drop-shadow(0 0 20px rgba(100,200,255,1)); }
+}
+
+/* Float base */
+.character {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  animation: floatChar 2.5s ease-in-out infinite alternate;
+}
+@keyframes floatChar {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-12px); }
+}
+.char-left { animation-delay: 0s; }
+.char-right { animation-delay: 1.2s; }
+.char-center { animation-delay: 0.6s; }
 }
 .char-shadow {
   position:absolute; bottom:-10px;
