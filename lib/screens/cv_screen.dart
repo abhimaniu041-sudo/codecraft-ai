@@ -23,8 +23,203 @@ class _CVScreenState extends State<CVScreen> {
   final _experienceCtrl = TextEditingController();
   final _languagesCtrl = TextEditingController();
 
+  String _selectedTemplate = 'modern';
   bool _cvGenerated = false;
   String _cvContent = '';
+
+  final List<Map<String, dynamic>> _templates = [
+    {'value': 'modern', 'label': '🎯 Modern', 'color': const Color(0xFF6C63FF)},
+    {'value': 'classic', 'label': '📄 Classic', 'color': const Color(0xFF2C3E50)},
+    {'value': 'creative', 'label': '🎨 Creative', 'color': const Color(0xFFE74C3C)},
+    {'value': 'minimal', 'label': '✨ Minimal', 'color': const Color(0xFF27AE60)},
+    {'value': 'professional', 'label': '💼 Pro', 'color': const Color(0xFF2980B9)},
+  ];
+
+  String _buildCV() {
+    final name = _nameCtrl.text.trim().toUpperCase();
+    final job = _jobCtrl.text.trim();
+    final dob = _dobCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final address = _addressCtrl.text.trim();
+    final objective = _objectiveCtrl.text.trim();
+    final education = _educationCtrl.text.trim();
+    final experience = _experienceCtrl.text.trim();
+    final skills = _skillsCtrl.text.trim();
+    final languages = _languagesCtrl.text.trim();
+
+    if (_selectedTemplate == 'modern') {
+      return '''
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+  $name
+  ${job.isNotEmpty ? job : 'Professional'}
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+
+CONTACT
+═══════════════════════════
+${phone.isNotEmpty ? '📞 $phone' : ''}
+${email.isNotEmpty ? '✉  $email' : ''}
+${address.isNotEmpty ? '📍 $address' : ''}
+${dob.isNotEmpty ? '🎂 $dob' : ''}
+
+OBJECTIVE
+═══════════════════════════
+${objective.isNotEmpty ? objective : 'Seeking a challenging position to utilize my skills.'}
+
+EDUCATION
+═══════════════════════════
+${education.isNotEmpty ? education : 'N/A'}
+
+EXPERIENCE
+═══════════════════════════
+${experience.isNotEmpty ? experience : 'Fresher'}
+
+SKILLS
+═══════════════════════════
+${skills.isNotEmpty ? skills.split(',').map((s) => '▸ ${s.trim()}').join('\n') : 'N/A'}
+
+LANGUAGES
+═══════════════════════════
+${languages.isNotEmpty ? languages.split(',').map((s) => '▸ ${s.trim()}').join('\n') : '▸ Hindi\n▸ English'}
+''';
+    } else if (_selectedTemplate == 'classic') {
+      return '''
+========================================
+           CURRICULUM VITAE
+========================================
+
+NAME    : $name
+TITLE   : ${job.isNotEmpty ? job : 'Professional'}
+DOB     : ${dob.isNotEmpty ? dob : 'N/A'}
+PHONE   : ${phone.isNotEmpty ? phone : 'N/A'}
+EMAIL   : ${email.isNotEmpty ? email : 'N/A'}
+ADDRESS : ${address.isNotEmpty ? address : 'N/A'}
+
+----------------------------------------
+CAREER OBJECTIVE
+----------------------------------------
+${objective.isNotEmpty ? objective : 'To obtain a position where I can contribute effectively.'}
+
+----------------------------------------
+EDUCATIONAL QUALIFICATION
+----------------------------------------
+${education.isNotEmpty ? education : 'N/A'}
+
+----------------------------------------
+WORK EXPERIENCE
+----------------------------------------
+${experience.isNotEmpty ? experience : 'Fresher / No prior experience'}
+
+----------------------------------------
+KEY SKILLS
+----------------------------------------
+${skills.isNotEmpty ? skills.split(',').map((s) => '  * ${s.trim()}').join('\n') : 'N/A'}
+
+----------------------------------------
+LANGUAGES KNOWN
+----------------------------------------
+${languages.isNotEmpty ? languages.split(',').map((s) => '  * ${s.trim()}').join('\n') : '  * Hindi\n  * English'}
+
+========================================
+''';
+    } else if (_selectedTemplate == 'creative') {
+      return '''
+╭─────────────────────────────────────╮
+│  ★  $name  ★
+│  ${job.isNotEmpty ? job : 'Creative Professional'}
+╰─────────────────────────────────────╯
+
+◆ ABOUT ME
+${objective.isNotEmpty ? objective : 'A passionate professional seeking growth.'}
+
+◆ CONTACT DETAILS
+  ▷ Phone   : ${phone.isNotEmpty ? phone : 'N/A'}
+  ▷ Email   : ${email.isNotEmpty ? email : 'N/A'}
+  ▷ Address : ${address.isNotEmpty ? address : 'N/A'}
+  ▷ DOB     : ${dob.isNotEmpty ? dob : 'N/A'}
+
+◆ EDUCATION
+${education.isNotEmpty ? education : 'N/A'}
+
+◆ WORK HISTORY
+${experience.isNotEmpty ? experience : 'Open to first opportunity!'}
+
+◆ MY SKILLS
+${skills.isNotEmpty ? skills.split(',').map((s) => '  ✓ ${s.trim()}').join('\n') : 'N/A'}
+
+◆ LANGUAGES
+${languages.isNotEmpty ? languages.split(',').map((s) => '  ✓ ${s.trim()}').join('\n') : '  ✓ Hindi\n  ✓ English'}
+''';
+    } else if (_selectedTemplate == 'minimal') {
+      return '''
+$name
+${job.isNotEmpty ? job : 'Professional'}
+─────────────────────────────────────
+
+${phone.isNotEmpty ? phone : ''} | ${email.isNotEmpty ? email : ''} | ${address.isNotEmpty ? address : ''}
+
+─────────────────────────────────────
+SUMMARY
+─────────────────────────────────────
+${objective.isNotEmpty ? objective : 'Motivated professional with a drive to succeed.'}
+
+─────────────────────────────────────
+EDUCATION
+─────────────────────────────────────
+${education.isNotEmpty ? education : 'N/A'}
+
+─────────────────────────────────────
+EXPERIENCE
+─────────────────────────────────────
+${experience.isNotEmpty ? experience : 'Entry level'}
+
+─────────────────────────────────────
+SKILLS & LANGUAGES
+─────────────────────────────────────
+${skills.isNotEmpty ? skills : 'N/A'}
+${languages.isNotEmpty ? languages : 'Hindi, English'}
+''';
+    } else {
+      return '''
+┌─────────────────────────────────────┐
+│        PROFESSIONAL RESUME          │
+└─────────────────────────────────────┘
+
+$name
+${job.isNotEmpty ? job : 'Professional'}
+
+PERSONAL INFORMATION
+────────────────────
+Name         : ${_nameCtrl.text.trim()}
+Date of Birth: ${dob.isNotEmpty ? dob : 'N/A'}
+Phone        : ${phone.isNotEmpty ? phone : 'N/A'}
+Email        : ${email.isNotEmpty ? email : 'N/A'}
+Location     : ${address.isNotEmpty ? address : 'N/A'}
+
+PROFESSIONAL SUMMARY
+────────────────────
+${objective.isNotEmpty ? objective : 'Results-driven professional seeking to leverage skills.'}
+
+EDUCATION
+────────────────────
+${education.isNotEmpty ? education : 'N/A'}
+
+PROFESSIONAL EXPERIENCE
+────────────────────
+${experience.isNotEmpty ? experience : 'Fresher'}
+
+CORE COMPETENCIES
+────────────────────
+${skills.isNotEmpty ? skills.split(',').map((s) => '• ${s.trim()}').join('\n') : 'N/A'}
+
+LANGUAGES
+────────────────────
+${languages.isNotEmpty ? languages.split(',').map((s) => '• ${s.trim()}').join('\n') : '• Hindi\n• English'}
+
+└─────────────────────────────────────┘
+''';
+    }
+  }
 
   void _generateCV() {
     if (_nameCtrl.text.trim().isEmpty) {
@@ -32,104 +227,44 @@ class _CVScreenState extends State<CVScreen> {
           const SnackBar(content: Text('Naam zaroori hai!')));
       return;
     }
-
-    final cv = '''
-╔══════════════════════════════════════════╗
-║           CURRICULUM VITAE               ║
-╚══════════════════════════════════════════╝
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ${_nameCtrl.text.trim().toUpperCase()}
-  ${_jobCtrl.text.trim().isNotEmpty ? _jobCtrl.text.trim() : 'Professional'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 PERSONAL INFORMATION
-─────────────────────────
-• Full Name    : ${_nameCtrl.text.trim()}
-• Date of Birth: ${_dobCtrl.text.trim().isNotEmpty ? _dobCtrl.text.trim() : 'N/A'}
-• Phone        : ${_phoneCtrl.text.trim().isNotEmpty ? _phoneCtrl.text.trim() : 'N/A'}
-• Email        : ${_emailCtrl.text.trim().isNotEmpty ? _emailCtrl.text.trim() : 'N/A'}
-• Address      : ${_addressCtrl.text.trim().isNotEmpty ? _addressCtrl.text.trim() : 'N/A'}
-
-🎯 OBJECTIVE
-─────────────────────────
-${_objectiveCtrl.text.trim().isNotEmpty ? _objectiveCtrl.text.trim() : 'To obtain a challenging position where I can utilize my skills and contribute to the organization\'s growth.'}
-
-🎓 EDUCATION
-─────────────────────────
-${_educationCtrl.text.trim().isNotEmpty ? _educationCtrl.text.trim() : 'Please add your education details.'}
-
-💼 EXPERIENCE
-─────────────────────────
-${_experienceCtrl.text.trim().isNotEmpty ? _experienceCtrl.text.trim() : 'Fresher / No experience yet.'}
-
-⚡ SKILLS
-─────────────────────────
-${_skillsCtrl.text.trim().isNotEmpty ? _skillsCtrl.text.trim().split(',').map((s) => '• ${s.trim()}').join('\n') : '• Please add your skills'}
-
-🌐 LANGUAGES
-─────────────────────────
-${_languagesCtrl.text.trim().isNotEmpty ? _languagesCtrl.text.trim().split(',').map((s) => '• ${s.trim()}').join('\n') : '• Hindi\n• English'}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Generated by CodeCraft AI
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-''';
-
     setState(() {
-      _cvContent = cv;
+      _cvContent = _buildCV();
       _cvGenerated = true;
     });
   }
 
   Future<void> _downloadCV() async {
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/${_nameCtrl.text.trim()}_CV.txt');
+      // Save to Downloads folder
+      Directory? dir;
+      if (Platform.isAndroid) {
+        dir = Directory('/storage/emulated/0/Download');
+        if (!await dir.exists()) {
+          dir = await getExternalStorageDirectory();
+        }
+      } else {
+        dir = await getApplicationDocumentsDirectory();
+      }
+
+      final fileName = '${_nameCtrl.text.trim().replaceAll(' ', '_')}_CV.txt';
+      final file = File('${dir!.path}/$fileName');
       await file.writeAsString(_cvContent);
 
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF12122A),
-            title: const Text('CV Saved! ✅',
-                style: TextStyle(color: Colors.white)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('CV is file mein save hua:',
-                    style: TextStyle(color: Colors.grey)),
-                const SizedBox(height: 8),
-                Text(file.path,
-                    style: const TextStyle(
-                        color: Color(0xFF6C63FF), fontSize: 11)),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: _cvContent));
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('CV clipboard mein copy ho gaya!')));
-                },
-                child: const Text('Copy karo',
-                    style: TextStyle(color: Color(0xFF3ECFCF))),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK',
-                    style: TextStyle(color: Color(0xFF6C63FF))),
-              ),
-            ],
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ CV Download folder mein save hua: $fileName'),
+            backgroundColor: const Color(0xFF6C63FF),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -144,50 +279,83 @@ Generated by CodeCraft AI
             Icon(Icons.description, color: Color(0xFF6C63FF)),
             SizedBox(width: 10),
             Text('CV Generator',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Template Selector
+            const Text('Template Choose Karo:',
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 44,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _templates.length,
+                itemBuilder: (ctx, i) {
+                  final t = _templates[i];
+                  final isSelected = _selectedTemplate == t['value'];
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      _selectedTemplate = t['value'];
+                      if (_cvGenerated) _cvContent = _buildCV();
+                    }),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? t['color'] : const Color(0xFF12122A),
+                        border: Border.all(
+                          color: isSelected ? t['color'] : const Color(0xFF6C63FF).withOpacity(0.3),
+                        ),
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Text(t['label'],
+                          style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.grey,
+                              fontSize: 13)),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
             _buildSection('👤 Personal Info', [
               _field(_nameCtrl, 'Full Name *', Icons.person),
               _field(_dobCtrl, 'Date of Birth (DD/MM/YYYY)', Icons.cake),
               _field(_phoneCtrl, 'Phone Number', Icons.phone),
               _field(_emailCtrl, 'Email Address', Icons.email),
-              _field(_addressCtrl, 'Address / City', Icons.location_on),
+              _field(_addressCtrl, 'City / Address', Icons.location_on),
               _field(_jobCtrl, 'Job Title / Profession', Icons.work),
             ]),
             const SizedBox(height: 12),
             _buildSection('🎯 Objective', [
-              _fieldMulti(_objectiveCtrl, 'Career objective likho...'),
+              _fieldMulti(_objectiveCtrl, 'Career objective ya summary likho...'),
             ]),
             const SizedBox(height: 12),
             _buildSection('🎓 Education', [
-              _fieldMulti(_educationCtrl,
-                  'e.g. B.Tech Computer Science, ABC College, 2022'),
+              _fieldMulti(_educationCtrl, 'e.g. 12th Pass, ABC School, 2022'),
             ]),
             const SizedBox(height: 12),
             _buildSection('💼 Experience', [
-              _fieldMulti(_experienceCtrl,
-                  'e.g. Software Developer at XYZ Company, 2022-2023'),
+              _fieldMulti(_experienceCtrl, 'e.g. IT Support, Marriott Hotel, 5 months'),
             ]),
             const SizedBox(height: 12),
             _buildSection('⚡ Skills', [
-              _fieldMulti(_skillsCtrl,
-                  'Comma se alag karo: Flutter, Python, Java, etc.'),
+              _fieldMulti(_skillsCtrl, 'Comma se alag karo: Flutter, Python...'),
             ]),
             const SizedBox(height: 12),
             _buildSection('🌐 Languages', [
-              _fieldMulti(
-                  _languagesCtrl, 'e.g. Hindi, English, Marathi'),
+              _fieldMulti(_languagesCtrl, 'e.g. Hindi, English, Punjabi'),
             ]),
             const SizedBox(height: 20),
 
-            // Generate Button
             GestureDetector(
               onTap: _generateCV,
               child: Container(
@@ -205,10 +373,7 @@ Generated by CodeCraft AI
                       Icon(Icons.auto_awesome, color: Colors.white),
                       SizedBox(width: 8),
                       Text('CV Generate Karo',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                     ],
                   ),
                 ),
@@ -217,29 +382,20 @@ Generated by CodeCraft AI
 
             if (_cvGenerated) ...[
               const SizedBox(height: 16),
-
-              // CV Preview
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF12122A),
-                  border: Border.all(
-                      color: const Color(0xFF6C63FF).withOpacity(0.5)),
+                  border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.4)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  _cvContent,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                    height: 1.5,
-                  ),
-                ),
+                child: Text(_cvContent,
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 12,
+                        fontFamily: 'monospace', height: 1.6)),
               ),
               const SizedBox(height: 12),
-
               Row(
                 children: [
                   Expanded(
@@ -247,11 +403,10 @@ Generated by CodeCraft AI
                       onTap: () {
                         Clipboard.setData(ClipboardData(text: _cvContent));
                         ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('CV copy ho gaya!')));
+                            const SnackBar(content: Text('CV copy ho gaya!')));
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
                           color: const Color(0xFF12122A),
                           border: Border.all(color: const Color(0xFF6C63FF)),
@@ -261,12 +416,9 @@ Generated by CodeCraft AI
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.copy,
-                                  color: Color(0xFF6C63FF), size: 18),
+                              Icon(Icons.copy, color: Color(0xFF6C63FF), size: 18),
                               SizedBox(width: 6),
-                              Text('Copy',
-                                  style:
-                                      TextStyle(color: Color(0xFF6C63FF))),
+                              Text('Copy', style: TextStyle(color: Color(0xFF6C63FF))),
                             ],
                           ),
                         ),
@@ -278,7 +430,7 @@ Generated by CodeCraft AI
                     child: GestureDetector(
                       onTap: _downloadCV,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                               colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
@@ -288,11 +440,9 @@ Generated by CodeCraft AI
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.download,
-                                  color: Colors.white, size: 18),
+                              Icon(Icons.download, color: Colors.white, size: 18),
                               SizedBox(width: 6),
-                              Text('Save',
-                                  style: TextStyle(color: Colors.white)),
+                              Text('Download', style: TextStyle(color: Colors.white)),
                             ],
                           ),
                         ),
@@ -319,11 +469,8 @@ Generated by CodeCraft AI
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  color: Color(0xFF6C63FF),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14)),
+          Text(title, style: const TextStyle(
+              color: Color(0xFF6C63FF), fontWeight: FontWeight.bold, fontSize: 14)),
           const SizedBox(height: 10),
           ...children,
         ],
@@ -344,19 +491,16 @@ Generated by CodeCraft AI
           filled: true,
           fillColor: const Color(0xFF0A0A14),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none),
+              borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide:
-                BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.2)),
+            borderSide: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.2)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Color(0xFF6C63FF)),
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         ),
       ),
     );
@@ -373,12 +517,10 @@ Generated by CodeCraft AI
         filled: true,
         fillColor: const Color(0xFF0A0A14),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide:
-              BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.2)),
+          borderSide: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
