@@ -51,58 +51,61 @@ class _LogoScreenState extends State<LogoScreen> {
   ];
 
   Future<void> _saveLogo() async {
-    if (_saving) return;
-    setState(() => _saving = true);
+  if (_saving) return;
+  setState(() => _saving = true);
 
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      final boundary = _repaintKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) throw Exception('Logo render nahi hua');
+  try {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final boundary = _repaintKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) throw Exception('Render error');
 
-      final ui.Image image = await boundary.toImage(pixelRatio: 4.0);
-      final ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) throw Exception('Image data null');
+    final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+    final ByteData? byteData =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) throw Exception('Image null');
 
-      final Uint8List bytes = byteData.buffer.asUint8List();
+    final Uint8List bytes = byteData.buffer.asUint8List();
+    final dir = await getApplicationDocumentsDirectory();
+    final name = _nameCtrl.text.trim().replaceAll(' ', '_');
+    final fileName = '${name}_logo_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = File('${dir.path}/$fileName');
+    await file.writeAsBytes(bytes);
 
-      Directory? dir;
-      if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Pictures');
-        if (!await dir.exists()) {
-          dir = Directory('/storage/emulated/0/Download');
-        }
-        if (!await dir.exists()) {
-          dir = await getExternalStorageDirectory();
-        }
-      } else {
-        dir = await getApplicationDocumentsDirectory();
-      }
-
-      final name = _nameCtrl.text.trim().replaceAll(' ', '_');
-      final fileName = '${name}_logo_${DateTime.now().millisecondsSinceEpoch}.png';
-      final file = File('${dir!.path}/$fileName');
-      await file.writeAsBytes(bytes);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ Logo Gallery/Pictures mein save hua!'),
-            backgroundColor: const Color(0xFF6C63FF),
-            duration: const Duration(seconds: 3),
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF12122A),
+          title: const Text('Logo Saved! ✅', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(file, height: 150, fit: BoxFit.contain),
+              ),
+              const SizedBox(height: 12),
+              const Text('Share karo:', style: TextStyle(color: Colors.grey)),
+            ],
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK', style: TextStyle(color: Color(0xFF6C63FF))),
+            ),
+          ],
+        ),
+      );
     }
-
-    setState(() => _saving = false);
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+  setState(() => _saving = false);
   }
 
   @override
