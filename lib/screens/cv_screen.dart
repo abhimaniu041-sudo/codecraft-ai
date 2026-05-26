@@ -234,39 +234,75 @@ ${languages.isNotEmpty ? languages.split(',').map((s) => '• ${s.trim()}').join
   }
 
   Future<void> _downloadCV() async {
-    try {
-      // Save to Downloads folder
-      Directory? dir;
-      if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Download');
-        if (!await dir.exists()) {
-          dir = await getExternalStorageDirectory();
-        }
-      } else {
-        dir = await getApplicationDocumentsDirectory();
-      }
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    final fileName = '${_nameCtrl.text.trim().replaceAll(' ', '_')}_CV.txt';
+    final file = File('${dir.path}/$fileName');
+    await file.writeAsString(_cvContent);
 
-      final fileName = '${_nameCtrl.text.trim().replaceAll(' ', '_')}_CV.txt';
-      final file = File('${dir!.path}/$fileName');
-      await file.writeAsString(_cvContent);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ CV Download folder mein save hua: $fileName'),
-            backgroundColor: const Color(0xFF6C63FF),
-            duration: const Duration(seconds: 4),
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF12122A),
+          title: const Text('CV Ready! ✅',
+              style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('CV copy karke kahi bhi paste karo:',
+                  style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: _cvContent));
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ CV clipboard mein copy ho gaya! WhatsApp ya Notes mein paste karo.'),
+                      backgroundColor: Color(0xFF6C63FF),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.copy, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Copy to Clipboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close', style: TextStyle(color: Colors.grey)),
+            ),
+          ],
+        ),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      Clipboard.setData(ClipboardData(text: _cvContent));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ CV copy ho gaya! Paste karo jahan chahiye.'),
+          backgroundColor: Color(0xFF6C63FF),
+        ),
+      );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
