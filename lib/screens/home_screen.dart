@@ -4,6 +4,7 @@ import 'code_generator_screen.dart';
 import 'error_fixer_screen.dart';
 import 'logo_screen.dart';
 import 'cv_screen.dart';
+import 'video_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const ErrorFixerScreen(),
     const LogoScreen(),
     const CVScreen(),
+    const VideoScreen(),
   ];
 
   @override
@@ -30,8 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF12122A),
-          border: Border(
-              top: BorderSide(color: Colors.white.withOpacity(0.1))),
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -41,34 +42,15 @@ class _HomeScreenState extends State<HomeScreen> {
           unselectedItemColor: Colors.grey,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          selectedFontSize: 11,
-          unselectedFontSize: 10,
+          selectedFontSize: 10,
+          unselectedFontSize: 9,
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              activeIcon: Icon(Icons.chat_bubble),
-              label: 'Chat',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.code_outlined),
-              activeIcon: Icon(Icons.code),
-              label: 'Code',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bug_report_outlined),
-              activeIcon: Icon(Icons.bug_report),
-              label: 'Fix',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.brush_outlined),
-              activeIcon: Icon(Icons.brush),
-              label: 'Logo',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.description_outlined),
-              activeIcon: Icon(Icons.description),
-              label: 'CV',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, size: 22), activeIcon: Icon(Icons.chat_bubble, size: 22), label: 'Chat'),
+            BottomNavigationBarItem(icon: Icon(Icons.code_outlined, size: 22), activeIcon: Icon(Icons.code, size: 22), label: 'Code'),
+            BottomNavigationBarItem(icon: Icon(Icons.bug_report_outlined, size: 22), activeIcon: Icon(Icons.bug_report, size: 22), label: 'Fix'),
+            BottomNavigationBarItem(icon: Icon(Icons.brush_outlined, size: 22), activeIcon: Icon(Icons.brush, size: 22), label: 'Logo'),
+            BottomNavigationBarItem(icon: Icon(Icons.description_outlined, size: 22), activeIcon: Icon(Icons.description, size: 22), label: 'CV'),
+            BottomNavigationBarItem(icon: Icon(Icons.movie_outlined, size: 22), activeIcon: Icon(Icons.movie, size: 22), label: 'Video'),
           ],
         ),
       ),
