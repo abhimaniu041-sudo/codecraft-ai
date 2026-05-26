@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'chat_screen.dart';
 import 'code_generator_screen.dart';
 import 'error_fixer_screen.dart';
+import 'logo_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const ChatScreen(),
     const CodeGeneratorScreen(),
     const ErrorFixerScreen(),
+    const LogoScreen(),
   ];
 
   @override
@@ -26,9 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF12122A),
-          border: Border(
-            top: BorderSide(color: Colors.white.withOpacity(0.1)),
-          ),
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Colors.transparent,
           selectedItemColor: const Color(0xFF6C63FF),
           unselectedItemColor: Colors.grey,
+          type: BottomNavigationBarType.fixed,
           elevation: 0,
           items: const [
             BottomNavigationBarItem(
@@ -46,12 +47,17 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.code_outlined),
               activeIcon: Icon(Icons.code),
-              label: 'Code Generator',
+              label: 'Code Gen',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bug_report_outlined),
               activeIcon: Icon(Icons.bug_report),
-              label: 'Error Fixer',
+              label: 'Error Fix',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.brush_outlined),
+              activeIcon: Icon(Icons.brush),
+              label: 'Logo',
             ),
           ],
         ),
