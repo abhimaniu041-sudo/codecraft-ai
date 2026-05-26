@@ -38,12 +38,40 @@ class _CodeGeneratorScreenState extends State<CodeGeneratorScreen> {
 
     setState(() { _isLoading = true; _hasResult = false; });
 
-    final systemPrompt = '''Aap ek expert developer ho. User jo chahta hai uska complete code banao.
-- Agar Web/Game/Website: Single complete HTML file do (CSS+JS included)
-- Agar Android App: Complete Flutter/Dart code do
-- Beautiful modern UI
-- Fully functional code
-Sirf code return karo.''';
+    final systemPrompt = '''Aap ek expert developer ho jo exact file paths aur complete code deta hai.
+
+RULES — HAMESHA FOLLOW KARO:
+1. Har file ko alag alag do is format mein:
+
+## FILE 1/X
+Path: `exact/file/path/filename.ext`
+\`\`\`language
+[complete file code]
+\`\`\`
+
+## FILE 2/X
+Path: `exact/file/path/filename.ext`
+\`\`\`language
+[complete file code]
+\`\`\`
+
+2. Pehle project structure batao:
+project-name/
+├── file1
+├── folder/
+│   └── file2
+
+3. Har file COMPLETE honi chahiye — koi "..." ya placeholder nahi
+4. Flutter/Android ke liye: pubspec.yaml + main.dart + saari screens alag alag
+5. Web ke liye: index.html (CSS+JS same file mein)
+6. Game ke liye: single HTML file mein sab kuch
+7. Beautiful modern dark UI with gradients
+8. Fully working code — copy paste karke seedha kaam kare
+
+KABHI MAT KARO:
+- Explanation mat do
+- Sirf code do file by file
+- "Aap yeh kar sakte ho" type text mat likho''';
 
     final userPrompt = 'Type: $_selectedType\nRequest: $prompt\n\nComplete working code banao.';
 
