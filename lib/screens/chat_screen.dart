@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../services/ai_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -13,6 +15,35 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, String>> _messages = [];
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('chat_history');
+    if (saved != null) {
+      final List decoded = jsonDecode(saved);
+      setState(() {
+        _messages.addAll(decoded.map((e) => Map<String, String>.from(e)));
+      });
+      _scrollToBottom();
+    }
+  }
+
+  Future<void> _saveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('chat_history', jsonEncode(_messages));
+  }
+
+  Future<void> _clearHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('chat_history');
+    setState(() => _messages.clear());
+  }
 
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -47,12 +78,14 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add({'role': 'assistant', 'content': reply});
         _isLoading = false;
       });
+      await _saveHistory();
       _scrollToBottom();
     } catch (e) {
       setState(() {
         _messages.add({'role': 'assistant', 'content': 'Error: $e'});
         _isLoading = false;
       });
+      await _saveHistory();
     }
   }
 
@@ -62,22 +95,46 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: const Color(0xFF0A0A14),
       appBar: AppBar(
         backgroundColor: const Color(0xFF12122A),
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 10),
-            const Text('AI Chat', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Icon(Icons.auto_awesome, color: Color(0xFF6C63FF)),
+            SizedBox(width: 10),
+            Text('AI Chat',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.grey),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: const Color(0xFF12122A),
+                  title: const Text('Chat Clear Karo?',
+                      style: TextStyle(color: Colors.white)),
+                  content: const Text('Saari chat history delete ho jayegi.',
+                      style: TextStyle(color: Colors.grey)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel',
+                          style: TextStyle(color: Colors.grey)),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        _clearHistory();
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Delete',
+                          style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -91,7 +148,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       if (index == _messages.length) return _buildTyping();
                       final msg = _messages[index];
-                      return _buildBubble(msg['content']!, msg['role'] == 'user');
+                      return _buildBubble(
+                          msg['content']!, msg['role'] == 'user');
                     },
                   ),
           ),
@@ -111,15 +169,22 @@ class _ChatScreenState extends State<ChatScreen> {
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
+                gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Icon(Icons.auto_awesome, color: Colors.white, size: 40),
             ),
             const SizedBox(height: 20),
-            const Text('CodeCraft AI', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text('CodeCraft AI',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Kuch bhi puchho — App, Website, Game banao!', style: TextStyle(color: Colors.grey, fontSize: 14), textAlign: TextAlign.center),
+            const Text('Kuch bhi puchho — App, Website, Game banao!',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+                textAlign: TextAlign.center),
             const SizedBox(height: 32),
             Wrap(
               spacing: 8, runSpacing: 8,
@@ -146,10 +211,12 @@ class _ChatScreenState extends State<ChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A35),
-          border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.5)),
+          border: Border.all(
+              color: const Color(0xFF6C63FF).withOpacity(0.5)),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+        child: Text(text,
+            style: const TextStyle(color: Colors.white70, fontSize: 13)),
       ),
     );
   }
@@ -160,13 +227,17 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
+        constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.82),
         decoration: BoxDecoration(
           gradient: isUser
-              ? const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF5555EE)])
+              ? const LinearGradient(
+                  colors: [Color(0xFF6C63FF), Color(0xFF5555EE)])
               : null,
           color: isUser ? null : const Color(0xFF1A1A2E),
-          border: isUser ? null : Border.all(color: Colors.white.withOpacity(0.1)),
+          border: isUser
+              ? null
+              : Border.all(color: Colors.white.withOpacity(0.1)),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -180,9 +251,15 @@ class _ChatScreenState extends State<ChatScreen> {
             if (!isUser)
               const Padding(
                 padding: EdgeInsets.only(bottom: 6),
-                child: Text('🤖 CodeCraft AI', style: TextStyle(color: Color(0xFF6C63FF), fontSize: 11, fontWeight: FontWeight.bold)),
+                child: Text('🤖 CodeCraft AI',
+                    style: TextStyle(
+                        color: Color(0xFF6C63FF),
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold)),
               ),
-            Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5)),
+            Text(text,
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 14, height: 1.5)),
           ],
         ),
       ),
@@ -210,10 +287,12 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             SizedBox(
               width: 40, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF6C63FF)),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Color(0xFF6C63FF)),
             ),
             SizedBox(width: 10),
-            Text('AI soch raha hai...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+            Text('AI soch raha hai...',
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
           ],
         ),
       ),
@@ -243,7 +322,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   borderRadius: BorderRadius.circular(25),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
               ),
               onSubmitted: (_) => _sendMessage(),
             ),
@@ -254,7 +334,8 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Container(
               width: 46, height: 46,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
+                gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
                 borderRadius: BorderRadius.circular(23),
               ),
               child: const Icon(Icons.send, color: Colors.white, size: 20),
