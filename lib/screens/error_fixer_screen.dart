@@ -14,16 +14,18 @@ class ErrorFixerScreen extends StatefulWidget {
 class _ErrorFixerScreenState extends State<ErrorFixerScreen> {
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _errorController = TextEditingController();
-  File? _screenshot;
+  List<File> _screenshots = [];
   String _fixedCode = '';
   bool _isLoading = false;
   bool _hasResult = false;
 
-  Future<void> _pickScreenshot() async {
+  Future<void> _pickScreenshots() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() => _screenshot = File(picked.path));
+    final picked = await picker.pickMultiImage();
+    if (picked.isNotEmpty) {
+      setState(() {
+        _screenshots = picked.map((x) => File(x.path)).toList();
+      });
     }
   }
 
@@ -31,31 +33,35 @@ class _ErrorFixerScreenState extends State<ErrorFixerScreen> {
     final code = _codeController.text.trim();
     final error = _errorController.text.trim();
 
-    if (code.isEmpty && error.isEmpty) {
+    if (code.isEmpty && error.isEmpty && _screenshots.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Code ya error message daalo!')),
+        const SnackBar(content: Text('Screenshot, code ya error message daalo!')),
       );
       return;
     }
 
     setState(() { _isLoading = true; _hasResult = false; });
 
-    final prompt = '''Code mein error hai, fix karo:
+    final prompt = '''Yeh code mein error hai, fix karo:
 
 CODE:
-$code
+${code.isEmpty ? 'Code provide nahi kiya' : code}
 
-ERROR:
-$error
+ERROR MESSAGE:
+${error.isEmpty ? 'Error message provide nahi kiya' : error}
 
-1. Error ka karan batao
+Screenshots: ${_screenshots.length} images uploaded
+
+Karo:
+1. Error ka karan batao (Hindi/English mein)
 2. Fixed complete code do
-3. Kya change kiya batao''';
+3. Kya change kiya woh explain karo
+4. Future mein yeh error na aaye uske liye tips do''';
 
     try {
       final result = await AIService.sendMessage(
         userMessage: prompt,
-        systemPrompt: 'Aap expert debugger ho. Code fix karo aur clear explanation do Hindi/English mein.',
+        systemPrompt: 'Aap ek expert senior developer aur debugger ho. Code errors dhundho aur fix karo. Clear step-by-step explanation do Hindi aur English mein. Hamesha complete fixed code do.',
         maxTokens: 4096,
       );
       setState(() {
@@ -83,52 +89,93 @@ $error
             Icon(Icons.bug_report, color: Color(0xFF6C63FF)),
             SizedBox(width: 10),
             Text('Error Fixer',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            // Screenshot Upload
             GestureDetector(
-              onTap: _pickScreenshot,
+              onTap: _pickScreenshots,
               child: Container(
                 width: double.infinity,
-                height: _screenshot != null ? 180 : 100,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF12122A),
                   border: Border.all(
-                    color: _screenshot != null
+                    color: _screenshots.isNotEmpty
                         ? const Color(0xFF6C63FF)
                         : const Color(0xFF6C63FF).withOpacity(0.3),
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: _screenshot != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(_screenshot!, fit: BoxFit.cover),
-                      )
-                    : const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                child: _screenshots.isEmpty
+                    ? const Column(
                         children: [
                           Icon(Icons.add_photo_alternate,
-                              color: Color(0xFF6C63FF), size: 32),
+                              color: Color(0xFF6C63FF), size: 36),
                           SizedBox(height: 8),
-                          Text('Error Screenshot Upload Karo',
-                              style: TextStyle(color: Colors.grey)),
+                          Text('Error Screenshots Upload Karo',
+                              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
+                          SizedBox(height: 4),
+                          Text('Multiple images select kar sakte ho',
+                              style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          SizedBox(
+                            height: 100,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _screenshots.length,
+                              itemBuilder: (ctx, i) => Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(_screenshots[i],
+                                          width: 90, height: 100, fit: BoxFit.cover),
+                                    ),
+                                    Positioned(
+                                      top: 2, right: 2,
+                                      child: GestureDetector(
+                                        onTap: () => setState(() => _screenshots.removeAt(i)),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.close, color: Colors.white, size: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('${_screenshots.length} screenshot(s) selected — Aur add karne ke liye tap karo',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12)),
                         ],
                       ),
               ),
             ),
             const SizedBox(height: 12),
+
+            // Error Message
             TextField(
               controller: _errorController,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: 'Error message paste karo...',
@@ -137,8 +184,7 @@ $error
                 fillColor: const Color(0xFF12122A),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  borderSide: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -147,10 +193,11 @@ $error
               ),
             ),
             const SizedBox(height: 12),
+
+            // Code Input
             TextField(
               controller: _codeController,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 12, fontFamily: 'monospace'),
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'monospace'),
               maxLines: 6,
               decoration: InputDecoration(
                 hintText: 'Apna code paste karo jisme error hai...',
@@ -159,8 +206,7 @@ $error
                 fillColor: const Color(0xFF12122A),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  borderSide: BorderSide(color: const Color(0xFF6C63FF).withOpacity(0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -169,14 +215,15 @@ $error
               ),
             ),
             const SizedBox(height: 12),
+
+            // Fix Button
             GestureDetector(
               onTap: _isLoading ? null : _fixError,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
+                  gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -184,16 +231,11 @@ $error
                       ? const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2)),
+                            SizedBox(width: 20, height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
                             SizedBox(width: 10),
                             Text('AI Fix Kar Raha Hai...',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                           ],
                         )
                       : const Row(
@@ -202,22 +244,18 @@ $error
                             Icon(Icons.auto_fix_high, color: Colors.white),
                             SizedBox(width: 8),
                             Text('Error Fix Karo',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16)),
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                           ],
                         ),
                 ),
               ),
             ),
+
             if (_hasResult) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Text('Fixed Code:',
-                      style: TextStyle(
-                          color: Colors.white70, fontWeight: FontWeight.bold)),
+                  const Text('Fixed Code:', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.copy, color: Color(0xFF6C63FF)),
@@ -231,20 +269,16 @@ $error
               ),
               Container(
                 width: double.infinity,
-                constraints: const BoxConstraints(maxHeight: 400),
+                constraints: const BoxConstraints(maxHeight: 500),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0D0D1A),
-                  border: Border.all(
-                      color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SingleChildScrollView(
-                  child: Text(
-                    _fixedCode,
-                    style: const TextStyle(
-                        color: Color(0xFF7FFF7F), fontSize: 12, height: 1.5),
-                  ),
+                  child: Text(_fixedCode,
+                      style: const TextStyle(color: Color(0xFF7FFF7F), fontSize: 12, height: 1.5)),
                 ),
               ),
             ],
