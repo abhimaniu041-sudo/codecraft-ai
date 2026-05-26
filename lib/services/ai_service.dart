@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class AIService {
   static const String _apiKey = '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';
   static const String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
-  static const String _model = 'llama3-70b-8192';
+  static const String _model = 'llama-3.3-70b-versatile';
 
   static Future<String> sendMessage({
     required String userMessage,
