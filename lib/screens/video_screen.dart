@@ -246,7 +246,7 @@ class _VideoScreenState extends State<VideoScreen> with TickerProviderStateMixin
                     // BG emoji decoration
                     Positioned(right: 16, top: 16,
                       child: Text(_bgEmojis[scene.background] ?? '🌆',
-                          style: const TextStyle(fontSize: 40, opacity: 0.3))),
+                          style: TextStyle(fontSize: 40, color: Colors.white.withOpacity(0.3)))),
 
                     // Stars for space
                     if (scene.background == 'space')
