@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../services/ai_service.dart';
@@ -69,11 +70,23 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
+      final history = _messages
+          .sublist(0, _messages.length - 1)
+          .map((m) => {'role': m['role']!, 'content': m['content']!})
+          .toList();
+
       final reply = await AIService.sendMessage(
         userMessage: text,
-        systemPrompt: 'Aap CodeCraft AI ho — ek expert coding assistant. Aap Hindi aur English dono mein baat kar sakte ho. App, website, game banane mein help karo. Detailed aur helpful jawab do.',
-        maxTokens: 2048,
+        systemPrompt: '''Aap CodeCraft AI ho — ek expert, friendly aur smart AI assistant.
+Aap Hindi aur English dono mein baat karte ho.
+Aap code, apps, websites, games banane mein expert ho.
+Jab user code maange toh complete working code do.
+Markdown use karo — **bold**, bullet points, code blocks sab.
+Hamesha helpful, detailed aur clear jawab do.''',
+        history: history.length > 20 ? history.sublist(history.length - 20) : history,
+        maxTokens: 4096,
       );
+
       setState(() {
         _messages.add({'role': 'assistant', 'content': reply});
         _isLoading = false;
@@ -89,6 +102,86 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Widget _buildFormattedText(String text) {
+    final lines = text.split('\n');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        if (line.startsWith('**') && line.endsWith('**')) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              line.replaceAll('**', ''),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14),
+            ),
+          );
+        } else if (line.startsWith('* ') || line.startsWith('- ')) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 2, left: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('• ',
+                    style: TextStyle(color: Color(0xFF6C63FF), fontSize: 14)),
+                Expanded(
+                  child: Text(
+                    line.substring(2).replaceAll('**', ''),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else if (line.startsWith('```') || line.endsWith('```')) {
+          return const SizedBox.shrink();
+        } else if (line.trim().isEmpty) {
+          return const SizedBox(height: 6);
+        } else {
+          final boldPattern = RegExp(r'\*\*(.*?)\*\*');
+          if (boldPattern.hasMatch(line)) {
+            final spans = <TextSpan>[];
+            int lastEnd = 0;
+            for (final match in boldPattern.allMatches(line)) {
+              if (match.start > lastEnd) {
+                spans.add(TextSpan(
+                  text: line.substring(lastEnd, match.start),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ));
+              }
+              spans.add(TextSpan(
+                text: match.group(1),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14),
+              ));
+              lastEnd = match.end;
+            }
+            if (lastEnd < line.length) {
+              spans.add(TextSpan(
+                text: line.substring(lastEnd),
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              ));
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: RichText(text: TextSpan(children: spans)),
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(line,
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: 14, height: 1.4)),
+          );
+        }
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,39 +193,36 @@ class _ChatScreenState extends State<ChatScreen> {
             Icon(Icons.auto_awesome, color: Color(0xFF6C63FF)),
             SizedBox(width: 10),
             Text('AI Chat',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.grey),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  backgroundColor: const Color(0xFF12122A),
-                  title: const Text('Chat Clear Karo?',
-                      style: TextStyle(color: Colors.white)),
-                  content: const Text('Saari chat history delete ho jayegi.',
-                      style: TextStyle(color: Colors.grey)),
-                  actions: [
-                    TextButton(
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: const Color(0xFF12122A),
+                title: const Text('Chat Clear Karo?',
+                    style: TextStyle(color: Colors.white)),
+                content: const Text('Saari history delete ho jayegi.',
+                    style: TextStyle(color: Colors.grey)),
+                actions: [
+                  TextButton(
                       onPressed: () => Navigator.pop(ctx),
                       child: const Text('Cancel',
-                          style: TextStyle(color: Colors.grey)),
-                    ),
-                    TextButton(
+                          style: TextStyle(color: Colors.grey))),
+                  TextButton(
                       onPressed: () {
                         _clearHistory();
                         Navigator.pop(ctx);
                       },
                       child: const Text('Delete',
-                          style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-            },
+                          style: TextStyle(color: Colors.red))),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -160,12 +250,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildWelcome() {
-    return Center(
+    return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 40),
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
@@ -173,31 +263,48 @@ class _ChatScreenState extends State<ChatScreen> {
                     colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 40),
+              child: const Icon(Icons.auto_awesome,
+                  color: Colors.white, size: 40),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             const Text('CodeCraft AI',
                 style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Kuch bhi puchho — App, Website, Game banao!',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+            const Text(
+                'Aapka personal AI assistant — App, Website, Game sab banao!',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
                 textAlign: TextAlign.center),
             const SizedBox(height: 32),
+            _sectionTitle('🚀 Quick Actions'),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8, runSpacing: 8,
               children: [
-                _quickBtn('🎮 Game banao'),
-                _quickBtn('📱 App banao'),
-                _quickBtn('🌐 Website banao'),
-                _quickBtn('💡 Code explain karo'),
+                _quickBtn('🎮 Snake game banao'),
+                _quickBtn('📱 Todo app banao'),
+                _quickBtn('🌐 Portfolio website'),
+                _quickBtn('💡 Python code explain karo'),
+                _quickBtn('🎨 Logo ideas do'),
+                _quickBtn('🔧 Flutter error fix karo'),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.bold)),
     );
   }
 
@@ -208,7 +315,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _sendMessage();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A35),
           border: Border.all(
@@ -216,7 +323,7 @@ class _ChatScreenState extends State<ChatScreen> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(text,
-            style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            style: const TextStyle(color: Colors.white70, fontSize: 12)),
       ),
     );
   }
@@ -228,7 +335,7 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.82),
+            maxWidth: MediaQuery.of(context).size.width * 0.85),
         decoration: BoxDecoration(
           gradient: isUser
               ? const LinearGradient(
@@ -237,7 +344,7 @@ class _ChatScreenState extends State<ChatScreen> {
           color: isUser ? null : const Color(0xFF1A1A2E),
           border: isUser
               ? null
-              : Border.all(color: Colors.white.withOpacity(0.1)),
+              : Border.all(color: Colors.white.withOpacity(0.08)),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -250,16 +357,40 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             if (!isUser)
               const Padding(
-                padding: EdgeInsets.only(bottom: 6),
-                child: Text('🤖 CodeCraft AI',
-                    style: TextStyle(
-                        color: Color(0xFF6C63FF),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                padding: EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Text('🤖 ', style: TextStyle(fontSize: 12)),
+                    Text('CodeCraft AI',
+                        style: TextStyle(
+                            color: Color(0xFF6C63FF),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
-            Text(text,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 14, height: 1.5)),
+            isUser
+                ? Text(text,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 14, height: 1.5))
+                : _buildFormattedText(text),
+            if (!isUser)
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: text));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Copy ho gaya!'),
+                            duration: Duration(seconds: 1)));
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Icon(Icons.copy, color: Colors.grey, size: 16),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -271,10 +402,10 @@ class _ChatScreenState extends State<ChatScreen> {
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
@@ -286,12 +417,12 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 40, height: 20,
+              width: 20, height: 20,
               child: CircularProgressIndicator(
                   strokeWidth: 2, color: Color(0xFF6C63FF)),
             ),
             SizedBox(width: 10),
-            Text('AI soch raha hai...',
+            Text('CodeCraft AI soch raha hai...',
                 style: TextStyle(color: Colors.grey, fontSize: 13)),
           ],
         ),
@@ -301,21 +432,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInput() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: const Color(0xFF12122A),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
       ),
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: _controller,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
               maxLines: null,
               decoration: InputDecoration(
                 hintText: 'Kuch bhi puchho...',
-                hintStyle: const TextStyle(color: Colors.grey),
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
                 filled: true,
                 fillColor: const Color(0xFF0A0A14),
                 border: OutlineInputBorder(
@@ -323,7 +454,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                    horizontal: 16, vertical: 10),
               ),
               onSubmitted: (_) => _sendMessage(),
             ),
@@ -332,11 +463,11 @@ class _ChatScreenState extends State<ChatScreen> {
           GestureDetector(
             onTap: _sendMessage,
             child: Container(
-              width: 46, height: 46,
+              width: 44, height: 44,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                     colors: [Color(0xFF6C63FF), Color(0xFF3ECFCF)]),
-                borderRadius: BorderRadius.circular(23),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: const Icon(Icons.send, color: Colors.white, size: 20),
             ),
