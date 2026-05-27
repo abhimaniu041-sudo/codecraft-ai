@@ -1,0 +1,19 @@
+{
+  "id": "hero",
+  "name": "Super Hero",
+  "emoji": "🦸",
+  "color": "#6C63FF",
+  "states": {
+    "idle": {"frames": 4, "fps": 8, "loop": true},
+    "walk": {"frames": 6, "fps": 12, "loop": true},
+    "run": {"frames": 6, "fps": 16, "loop": true},
+    "attack": {"frames": 5, "fps": 14, "loop": false},
+    "jump": {"frames": 4, "fps": 12, "loop": false},
+    "fly": {"frames": 4, "fps": 10, "loop": true},
+    "talk": {"frames": 3, "fps": 8, "loop": true},
+    "victory": {"frames": 5, "fps": 10, "loop": false},
+    "death": {"frames": 6, "fps": 8, "loop": false}
+  },
+  "scale": 1.0,
+  "hitbox": {"width": 60, "height": 80}
+}
