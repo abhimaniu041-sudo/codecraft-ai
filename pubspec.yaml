@@ -1,7 +1,7 @@
 name: codecraft_ai
-description: AI powered code generator app
+description: AI powered creative studio
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,10 +9,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # AI & Network
   http: ^1.1.0
-  image_picker: ^1.0.4
   shared_preferences: ^2.2.2
   path_provider: ^2.1.1
+  # Image
+  image_picker: ^1.0.4
+  # Game Engine
+  flame: ^1.18.0
+  # Animations
+  lottie: ^3.1.0
+  # Audio
+  audioplayers: ^6.0.0
+  # Utils
+  uuid: ^4.3.3
+  dart_json_mapper: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -21,3 +32,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/characters/hero/
+    - assets/characters/villain/
+    - assets/characters/robot/
+    - assets/characters/wizard/
+    - assets/characters/ninja/
+    - assets/backgrounds/
+    - assets/effects/
+    - assets/audio/music/
+    - assets/audio/sfx/
+    - assets/audio/ambience/
+    - assets/lottie/
