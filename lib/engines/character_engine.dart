@@ -195,7 +195,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     required this.tick,
   });
 
-  // Paint helpers
   Paint _fill(Color c) => Paint()..color = c..style = PaintingStyle.fill;
   Paint _stroke(Color c, double w) => Paint()
     ..color = c
@@ -214,7 +213,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
 
-    // Compute per-state animation values
     double bodyY = 0, bodyRot = 0, squishX = 1, squishY = 1, jumpOff = 0;
     double leftLegAngle = 0, rightLegAngle = 0;
     double leftArmAngle = 0, rightArmAngle = 0;
@@ -326,14 +324,12 @@ class _CartoonCharacterPainter extends CustomPainter {
     canvas.rotate(bodyRot);
     canvas.scale(squishX, squishY);
 
-    // Glow
     if (glowing) {
       canvas.drawCircle(Offset.zero, w * 0.38, _glow(glowColor, 18));
     }
 
     _drawShadow(canvas, w, h);
 
-    // Draw by type
     switch (data.type) {
       case CharacterType.robot:
         _drawRobot(canvas, w, h, leftLegAngle, rightLegAngle,
@@ -352,7 +348,6 @@ class _CartoonCharacterPainter extends CustomPainter {
             leftArmAngle, rightArmAngle, mouthOpen, t);
         break;
     }
-
     canvas.restore();
   }
 
@@ -368,39 +363,32 @@ class _CartoonCharacterPainter extends CustomPainter {
     );
   }
 
-  // ── HUMAN-BASED characters ──────────────────────────────
   void _drawHuman(
     Canvas canvas, double w, double h,
     double llA, double rlA, double laA, double raA,
     double mouthOpen, double t,
   ) {
-    final bw = w * 0.38; // body width
-    final bh = h * 0.32; // body height
+    final bw = w * 0.38;
+    final bh = h * 0.32;
     final legW = w * 0.11;
     final legH = h * 0.22;
     final armW = w * 0.10;
     final armH = h * 0.24;
     final headR = w * 0.22;
 
-    // ─ Legs ─
     _drawLimb(canvas, Offset(-bw * 0.28, bh * 0.5), llA, legW, legH,
         data.primaryColor, data.primaryColor.withOpacity(0.7), true);
     _drawLimb(canvas, Offset(bw * 0.28, bh * 0.5), rlA, legW, legH,
         data.primaryColor, data.primaryColor.withOpacity(0.7), true);
 
-    // ─ Body ─
     _drawBody(canvas, bw, bh);
-
-    // ─ Accessories by type ─
     _drawBodyAccessory(canvas, w, h, bw, bh);
 
-    // ─ Arms ─
     _drawLimb(canvas, Offset(-bw * 0.52, -bh * 0.1), laA, armW, armH,
         data.primaryColor, data.skinColor, false);
     _drawLimb(canvas, Offset(bw * 0.52, -bh * 0.1), raA, armW, armH,
         data.primaryColor, data.skinColor, false);
 
-    // ─ Neck ─
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
@@ -412,7 +400,6 @@ class _CartoonCharacterPainter extends CustomPainter {
       _fill(data.skinColor),
     );
 
-    // ─ Head ─
     _drawHead(canvas, headR, mouthOpen, t);
   }
 
@@ -440,7 +427,6 @@ class _CartoonCharacterPainter extends CustomPainter {
       Canvas canvas, double w, double h, double bw, double bh) {
     switch (data.type) {
       case CharacterType.hero:
-        // Cape
         final capePath = Path()
           ..moveTo(-bw * 0.45, -bh * 0.3)
           ..quadraticBezierTo(
@@ -451,12 +437,10 @@ class _CartoonCharacterPainter extends CustomPainter {
             Paint()
               ..color = data.accentColor
               ..style = PaintingStyle.fill);
-        // Emblem
         _drawStar(canvas, Offset(0, -bh * 0.05), bw * 0.1,
             data.accentColor);
         break;
       case CharacterType.villain:
-        // Dark cloak
         final cloakPath = Path()
           ..moveTo(-bw * 0.5, -bh * 0.35)
           ..quadraticBezierTo(
@@ -467,32 +451,29 @@ class _CartoonCharacterPainter extends CustomPainter {
             Paint()
               ..color = const Color(0xFF1A0000)
               ..style = PaintingStyle.fill);
-        // Red emblem
         canvas.drawCircle(
             Offset(0, -bh * 0.05), bw * 0.08, _fill(data.accentColor));
         break;
       case CharacterType.wizard:
-        // Robe belt
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
                 center: Offset(0, bh * 0.05),
                 width: bw * 1.02,
                 height: bh * 0.1),
-            const Radius.circular(4),
+            Radius.circular(4),
           ),
           _fill(data.accentColor.withOpacity(0.6)),
         );
         break;
       case CharacterType.warrior:
-        // Armor plates
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
                 center: Offset(0, -bh * 0.1),
                 width: bw * 0.7,
                 height: bh * 0.35),
-            const Radius.circular(6),
+            Radius.circular(6),
           ),
           _fill(const Color(0xFF9E9E9E)),
         );
@@ -502,7 +483,7 @@ class _CartoonCharacterPainter extends CustomPainter {
                 center: Offset(0, -bh * 0.1),
                 width: bw * 0.7,
                 height: bh * 0.35),
-            const Radius.circular(6),
+            Radius.circular(6),
           ),
           _stroke(Colors.black26, 1.5),
         );
@@ -531,7 +512,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     canvas.drawRRect(rect, grad);
     canvas.drawRRect(rect, _stroke(Colors.black.withOpacity(0.15), 1.2));
 
-    // Foot/hand
     if (isLeg) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -549,45 +529,32 @@ class _CartoonCharacterPainter extends CustomPainter {
 
   void _drawHead(Canvas canvas, double headR, double mouthOpen, double t) {
     final headY = -headR * 2.1;
-
-    // Head base
-    canvas.drawCircle(Offset(0, headY), headR,
-        _fill(data.skinColor));
+    canvas.drawCircle(Offset(0, headY), headR, _fill(data.skinColor));
     canvas.drawCircle(Offset(0, headY), headR,
         _stroke(Colors.black.withOpacity(0.15), 1.5));
-
-    // Hair
     _drawHair(canvas, headR, headY);
-
-    // Eyes
     _drawEyes(canvas, headR, headY, t);
-
-    // Mouth
     _drawMouth(canvas, headR, headY, mouthOpen);
-
-    // Type-specific head accessory
     _drawHeadAccessory(canvas, headR, headY);
   }
 
   void _drawHair(Canvas canvas, double r, double hy) {
     final paint = _fill(data.hairColor);
-    // Top hair
     canvas.drawArc(
       Rect.fromCircle(center: Offset(0, hy), radius: r * 1.02),
       -math.pi, math.pi, true, paint,
     );
-    // Sideburns
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(-r * 0.95, hy - r * 0.1, r * 0.2, r * 0.5),
-        const Radius.circular(4),
+        Radius.circular(4),
       ),
       paint,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(r * 0.75, hy - r * 0.1, r * 0.2, r * 0.5),
-        const Radius.circular(4),
+        Radius.circular(4),
       ),
       paint,
     );
@@ -600,23 +567,17 @@ class _CartoonCharacterPainter extends CustomPainter {
     ];
 
     for (final eo in eyeOffsets) {
-      // White
       canvas.drawOval(
         Rect.fromCenter(center: eo, width: r * 0.32, height: r * 0.28),
         _fill(Colors.white),
       );
-      // Iris
       canvas.drawCircle(eo + Offset(0, r * 0.02), r * 0.1,
           _fill(const Color(0xFF1565C0)));
-      // Pupil
       canvas.drawCircle(eo + Offset(0, r * 0.02), r * 0.055,
           _fill(Colors.black));
-      // Shine
       canvas.drawCircle(
           eo + Offset(-r * 0.04, -r * 0.04), r * 0.03, _fill(Colors.white));
-      // Eyelid blink
-      final blinkH =
-          state == CharacterState.idle ? math.sin(t * math.pi * 0.7).abs() * r * 0.02 : 0.0;
+      final blinkH = state == CharacterState.idle ? math.sin(t * math.pi * 0.7).abs() * r * 0.02 : 0.0;
       if (blinkH > 0.01) {
         canvas.drawOval(
           Rect.fromCenter(
@@ -626,14 +587,12 @@ class _CartoonCharacterPainter extends CustomPainter {
           _fill(data.skinColor),
         );
       }
-      // Outline
       canvas.drawOval(
         Rect.fromCenter(center: eo, width: r * 0.32, height: r * 0.28),
         _stroke(Colors.black.withOpacity(0.3), 1.0),
       );
     }
 
-    // Eyebrows
     double browTilt = 0;
     if (state == CharacterState.angry) browTilt = 0.38;
     if (state == CharacterState.sad) browTilt = -0.28;
@@ -646,7 +605,7 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(center: Offset.zero, width: r * 0.3, height: r * 0.07),
-          const Radius.circular(3),
+          Radius.circular(3),
         ),
         _fill(data.hairColor),
       );
@@ -657,18 +616,15 @@ class _CartoonCharacterPainter extends CustomPainter {
   void _drawMouth(Canvas canvas, double r, double hy, double mouthOpen) {
     final my = hy + r * 0.32;
     final path = Path();
-
     if (state == CharacterState.happy || state == CharacterState.victory) {
-      // Big smile
       path.moveTo(-r * 0.28, my - r * 0.04);
       path.quadraticBezierTo(0, my + r * 0.25, r * 0.28, my - r * 0.04);
       canvas.drawPath(path, _stroke(Colors.black87, 2));
-      // Teeth
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(center: Offset(0, my + r * 0.06),
               width: r * 0.38, height: r * 0.1),
-          const Radius.circular(3),
+          Radius.circular(3),
         ),
         _fill(Colors.white),
       );
@@ -696,7 +652,7 @@ class _CartoonCharacterPainter extends CustomPainter {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(-r * 0.12, my - openAmount, r * 0.24, r * 0.06),
-            const Radius.circular(2),
+            Radius.circular(2),
           ),
           _fill(Colors.white.withOpacity(0.9)),
         );
@@ -711,19 +667,17 @@ class _CartoonCharacterPainter extends CustomPainter {
   void _drawHeadAccessory(Canvas canvas, double r, double hy) {
     switch (data.type) {
       case CharacterType.hero:
-        // Mask
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
                 center: Offset(0, hy - r * 0.05),
                 width: r * 1.1, height: r * 0.35),
-            const Radius.circular(r * 0.1),
+            Radius.circular(r * 0.1),
           ),
           _fill(data.primaryColor.withOpacity(0.75)),
         );
         break;
       case CharacterType.wizard:
-        // Wizard hat
         final hatPath = Path()
           ..moveTo(-r * 0.55, hy - r * 0.8)
           ..lineTo(0, hy - r * 2.1)
@@ -735,38 +689,34 @@ class _CartoonCharacterPainter extends CustomPainter {
             Rect.fromCenter(
                 center: Offset(0, hy - r * 0.82),
                 width: r * 1.4, height: r * 0.22),
-            const Radius.circular(r * 0.08),
+            Radius.circular(r * 0.08),
           ),
           _fill(data.primaryColor.withOpacity(0.8)),
         );
-        // Star on hat
         _drawStar(canvas, Offset(0, hy - r * 1.5), r * 0.12,
             data.accentColor);
         break;
       case CharacterType.ninja:
-        // Mask covering lower face
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
                 center: Offset(0, hy + r * 0.15),
                 width: r * 1.1, height: r * 0.5),
-            const Radius.circular(r * 0.1),
+            Radius.circular(r * 0.1),
           ),
           _fill(Colors.black87),
         );
-        // Headband
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
                 center: Offset(0, hy - r * 0.25),
                 width: r * 1.15, height: r * 0.22),
-            const Radius.circular(r * 0.06),
+            Radius.circular(r * 0.06),
           ),
           _fill(data.accentColor),
         );
         break;
       case CharacterType.warrior:
-        // Helmet
         canvas.drawArc(
           Rect.fromCircle(center: Offset(0, hy - r * 0.08), radius: r * 1.08),
           -math.pi * 1.1, math.pi * 1.2, false,
@@ -774,7 +724,6 @@ class _CartoonCharacterPainter extends CustomPainter {
         );
         break;
       case CharacterType.princess:
-        // Crown
         final crownPath = Path()
           ..moveTo(-r * 0.5, hy - r * 1.0)
           ..lineTo(-r * 0.5, hy - r * 1.35)
@@ -786,7 +735,6 @@ class _CartoonCharacterPainter extends CustomPainter {
           ..close();
         canvas.drawPath(crownPath, _fill(const Color(0xFFFFD600)));
         canvas.drawPath(crownPath, _stroke(const Color(0xFFFF8F00), 1.5));
-        // Gems
         for (final gx in [-r * 0.25, 0.0, r * 0.25]) {
           canvas.drawCircle(Offset(gx, hy - r * 1.1), r * 0.06,
               _fill(data.accentColor));
@@ -797,7 +745,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     }
   }
 
-  // ── ROBOT character ──────────────────────────────────────
   void _drawRobot(
     Canvas canvas, double w, double h,
     double llA, double rlA, double laA, double raA,
@@ -812,7 +759,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     final headW = w * 0.42;
     final headH = h * 0.26;
 
-    // Legs
     for (final side in [-1.0, 1.0]) {
       canvas.save();
       canvas.translate(side * bw * 0.27, bh * 0.5);
@@ -820,42 +766,37 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-legW / 2, 0, legW, legH),
-            const Radius.circular(4)),
+            Radius.circular(4)),
         _fill(data.primaryColor),
       );
-      // Foot
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-legW * 0.8, legH - legW * 0.4, legW * 1.8, legW * 0.7),
-            const Radius.circular(3)),
+            Radius.circular(3)),
         _fill(data.primaryColor.withOpacity(0.7)),
       );
       canvas.restore();
     }
 
-    // Body - rectangle robot style
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(center: Offset.zero, width: bw, height: bh),
-          const Radius.circular(6)),
+          Radius.circular(6)),
       _fill(data.primaryColor),
     );
-    // Chest panel
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.05), width: bw * 0.6, height: bh * 0.5),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(data.primaryColor.withOpacity(0.5)),
     );
-    // Chest light
     canvas.drawCircle(
         Offset(0, -bh * 0.08), bw * 0.08,
         _fill(data.accentColor));
     canvas.drawCircle(
         Offset(0, -bh * 0.08), bw * 0.08,
         _glow(data.accentColor, 8));
-    // Bolts
     for (final bx in [-bw * 0.38, bw * 0.38]) {
       for (final by in [-bh * 0.3, bh * 0.25]) {
         canvas.drawCircle(Offset(bx, by), w * 0.025,
@@ -863,39 +804,34 @@ class _CartoonCharacterPainter extends CustomPainter {
       }
     }
 
-    // Arms
     for (final side in [-1.0, 1.0]) {
       canvas.save();
       canvas.translate(side * bw * 0.55, -bh * 0.1);
       canvas.rotate(side == -1 ? laA : raA);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-            Rect.fromLTWH(-armW / 2, 0, armW, armH), const Radius.circular(4)),
+            Rect.fromLTWH(-armW / 2, 0, armW, armH), Radius.circular(4)),
         _fill(data.primaryColor.withOpacity(0.8)),
       );
-      // Claw hand
       canvas.drawCircle(
           Offset(0, armH + armW * 0.2), armW * 0.5, _fill(data.primaryColor));
       canvas.restore();
     }
 
-    // Head
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.72), width: headW, height: headH),
-          const Radius.circular(8)),
+          Radius.circular(8)),
       _fill(data.primaryColor),
     );
-    // Visor
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.7), width: headW * 0.75, height: headH * 0.4),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(data.accentColor.withOpacity(0.25)),
     );
-    // LED eyes
     final ledGlow = math.sin(t * math.pi * 4).abs();
     for (final ex in [-headW * 0.2, headW * 0.2]) {
       canvas.drawOval(
@@ -913,15 +849,13 @@ class _CartoonCharacterPainter extends CustomPainter {
         _glow(data.accentColor, 6),
       );
     }
-    // Speaker mouth
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.58), width: headW * 0.45, height: headH * 0.15),
-          const Radius.circular(3)),
+          Radius.circular(3)),
       _fill(Colors.black54),
     );
-    // Speaker lines
     if (state == CharacterState.talk) {
       for (int i = -2; i <= 2; i++) {
         final lineH = headH * 0.05 + mouthOpen * headH * 0.05;
@@ -931,12 +865,11 @@ class _CartoonCharacterPainter extends CustomPainter {
                   center: Offset(i * headW * 0.08, -bh * 0.58),
                   width: headW * 0.03,
                   height: lineH),
-              const Radius.circular(1)),
+              Radius.circular(1)),
           _fill(data.accentColor),
         );
       }
     }
-    // Antenna
     canvas.drawLine(
       Offset(0, -bh * 0.72 - headH * 0.5),
       Offset(0, -bh * 0.72 - headH * 0.88),
@@ -950,7 +883,6 @@ class _CartoonCharacterPainter extends CustomPainter {
         _glow(data.accentColor, 5));
   }
 
-  // ── DRAGON character ──────────────────────────────────────
   void _drawDragon(
     Canvas canvas, double w, double h,
     double llA, double rlA, double laA, double raA,
@@ -959,14 +891,12 @@ class _CartoonCharacterPainter extends CustomPainter {
     final bw = w * 0.44;
     final bh = h * 0.3;
 
-    // Tail
     final tailPath = Path()
       ..moveTo(bw * 0.4, 0)
       ..quadraticBezierTo(bw * 1.2, bh * 0.3, bw * 0.9, bh * 0.7)
       ..quadraticBezierTo(bw * 0.6, bh * 0.5, bw * 0.4, bh * 0.5);
     canvas.drawPath(tailPath, _fill(data.primaryColor.withOpacity(0.8)));
 
-    // Wings
     if (state == CharacterState.fly) {
       final wFlap = math.sin(t * math.pi * 4) * 0.3;
       for (final side in [-1.0, 1.0]) {
@@ -984,7 +914,6 @@ class _CartoonCharacterPainter extends CustomPainter {
       }
     }
 
-    // Legs
     for (final side in [-1.0, 1.0]) {
       canvas.save();
       canvas.translate(side * bw * 0.28, bh * 0.45);
@@ -992,10 +921,9 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-w * 0.07, 0, w * 0.14, h * 0.18),
-            const Radius.circular(5)),
+            Radius.circular(5)),
         _fill(data.primaryColor),
       );
-      // Claws
       for (int c = -1; c <= 1; c++) {
         canvas.drawLine(
           Offset(c * w * 0.04, h * 0.18),
@@ -1006,19 +934,16 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.restore();
     }
 
-    // Body
     canvas.drawOval(
       Rect.fromCenter(center: Offset.zero, width: bw, height: bh),
       _fill(data.primaryColor),
     );
-    // Belly scales
     canvas.drawOval(
       Rect.fromCenter(
           center: Offset(0, bh * 0.08), width: bw * 0.55, height: bh * 0.6),
       _fill(data.skinColor.withOpacity(0.45)),
     );
 
-    // Arms
     for (final side in [-1.0, 1.0]) {
       canvas.save();
       canvas.translate(side * bw * 0.5, -bh * 0.15);
@@ -1026,49 +951,43 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-w * 0.07, 0, w * 0.14, h * 0.2),
-            const Radius.circular(5)),
+            Radius.circular(5)),
         _fill(data.primaryColor),
       );
       canvas.restore();
     }
 
-    // Neck
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.55), width: bw * 0.22, height: bh * 0.28),
-          const Radius.circular(8)),
+          Radius.circular(8)),
       _fill(data.primaryColor),
     );
 
-    // Head
     final headOval =
         Rect.fromCenter(center: Offset(0, -bh * 0.88), width: bw * 0.55, height: bh * 0.4);
     canvas.drawOval(headOval, _fill(data.primaryColor));
 
-    // Snout
     final snoutOpen = mouthOpen * bh * 0.1 + bh * 0.04;
-    // Upper jaw
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(bw * 0.18, -bh * 0.88 + snoutOpen * 0.3),
               width: bw * 0.28,
               height: snoutOpen),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(data.primaryColor),
     );
-    // Lower jaw
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(bw * 0.18, -bh * 0.88 + snoutOpen),
               width: bw * 0.26,
               height: snoutOpen * 0.7),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(data.skinColor.withOpacity(0.6)),
     );
-    // Fire breath
     if (state == CharacterState.attack && mouthOpen > 0.3) {
       final firePath = Path()
         ..moveTo(bw * 0.3, -bh * 0.85)
@@ -1079,7 +998,6 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawPath(firePath, _glow(const Color(0xFFFF6D00), 10));
     }
 
-    // Eyes
     for (final ex in [-bw * 0.08, bw * 0.22]) {
       canvas.drawOval(
         Rect.fromCenter(
@@ -1090,7 +1008,6 @@ class _CartoonCharacterPainter extends CustomPainter {
           Offset(ex, -bh * 0.95), bw * 0.035, _fill(Colors.black));
     }
 
-    // Horns
     for (final hx in [-bw * 0.16, bw * 0.16]) {
       final hornPath = Path()
         ..moveTo(hx, -bh * 1.06)
@@ -1101,7 +1018,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     }
   }
 
-  // ── NINJA character ──────────────────────────────────────
   void _drawNinja(
     Canvas canvas, double w, double h,
     double llA, double rlA, double laA, double raA,
@@ -1110,7 +1026,6 @@ class _CartoonCharacterPainter extends CustomPainter {
     final bw = w * 0.36;
     final bh = h * 0.30;
 
-    // Legs
     for (final side in [-1.0, 1.0]) {
       canvas.save();
       canvas.translate(side * bw * 0.27, bh * 0.5);
@@ -1118,38 +1033,34 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-w * 0.09, 0, w * 0.18, h * 0.22),
-            const Radius.circular(5)),
+            Radius.circular(5)),
         _fill(Colors.black87),
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-w * 0.12, h * 0.19, w * 0.24, w * 0.08),
-            const Radius.circular(4)),
+            Radius.circular(4)),
         _fill(const Color(0xFF333333)),
       );
       canvas.restore();
     }
 
-    // Body
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(center: Offset.zero, width: bw, height: bh),
-          const Radius.circular(8)),
+          Radius.circular(8)),
       _fill(Colors.black87),
     );
-    // Belt
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, bh * 0.05), width: bw * 1.02, height: bh * 0.12),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(data.accentColor),
     );
-    // Sash knot
     canvas.drawCircle(Offset(bw * 0.38, bh * 0.05), bh * 0.08,
         _fill(data.accentColor));
 
-    // Arms
     for (final side in [-1.0, 1.0]) {
       canvas.save();
       canvas.translate(side * bw * 0.52, -bh * 0.08);
@@ -1157,16 +1068,14 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
             Rect.fromLTWH(-w * 0.075, 0, w * 0.15, h * 0.22),
-            const Radius.circular(5)),
+            Radius.circular(5)),
         _fill(Colors.black87),
       );
-      // Gloves
       canvas.drawCircle(Offset(0, h * 0.22 + w * 0.07), w * 0.07,
           _fill(const Color(0xFF222222)));
       canvas.restore();
     }
 
-    // Shuriken in hand for attack state
     if (state == CharacterState.attack) {
       canvas.save();
       canvas.translate(-bw * 0.55, -bh * 0.05);
@@ -1175,29 +1084,25 @@ class _CartoonCharacterPainter extends CustomPainter {
       canvas.restore();
     }
 
-    // Head
     canvas.drawCircle(Offset(0, -bh * 0.72), w * 0.22, _fill(data.skinColor));
     canvas.drawCircle(
         Offset(0, -bh * 0.72), w * 0.22,
         _stroke(Colors.black.withOpacity(0.15), 1.5));
 
-    // Mask
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.65), width: w * 0.4, height: w * 0.2),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(Colors.black87),
     );
-    // Headband
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromCenter(
               center: Offset(0, -bh * 0.8), width: w * 0.44, height: w * 0.12),
-          const Radius.circular(4)),
+          Radius.circular(4)),
       _fill(data.accentColor),
     );
-    // Eyes
     for (final ex in [-w * 0.09, w * 0.09]) {
       canvas.drawOval(
         Rect.fromCenter(
