@@ -1,0 +1,15 @@
+{
+  "id": "robot",
+  "name": "Battle Robot",
+  "emoji": "🤖",
+  "color": "#00E676",
+  "states": {
+    "idle": {"frames": 3, "fps": 6, "loop": true},
+    "walk": {"frames": 6, "fps": 10, "loop": true},
+    "attack": {"frames": 4, "fps": 12, "loop": false},
+    "fly": {"frames": 3, "fps": 8, "loop": true},
+    "death": {"frames": 5, "fps": 8, "loop": false}
+  },
+  "scale": 1.2,
+  "hitbox": {"width": 70, "height": 90}
+}
