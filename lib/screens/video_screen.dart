@@ -9,6 +9,31 @@ import '../engines/particle_engine.dart';
 import '../engines/scene_engine.dart';
 import '../engines/timeline_engine.dart';
 import '../services/ai_service.dart';
+// Existing imports ke saath add karo:
+import '../video/ai/ai_manager.dart';
+import '../video/ai/ai_config.dart';
+import '../video/assets/asset_manager.dart';
+import '../video/ai/scene_generator.dart';
+import '../video/engine/export_engine.dart';
+
+// initState mein add karo:
+@override
+void initState() {
+  super.initState();
+
+  // Initialize AI Manager with all providers
+  AIManager().configure(
+    groqKey: AIConfig.groqApiKey,
+    geminiKey: AIConfig.geminiApiKey,
+    openRouterKey: AIConfig.openRouterApiKey,
+    huggingFaceKey: AIConfig.huggingFaceApiKey,
+  );
+
+  // Initialize Asset Manager
+  AssetManager().init();
+
+  // ... rest of existing initState code
+}
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
