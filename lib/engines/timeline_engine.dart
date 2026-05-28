@@ -4,7 +4,6 @@ import 'scene_engine.dart';
 class TimelineEngine extends ChangeNotifier {
   List<StoryScene> scenes = [];
   int currentSceneIndex = 0;
-  double currentTime = 0;
   bool isPlaying = false;
   double playbackSpeed = 1.0;
   double _sceneElapsed = 0;
@@ -16,18 +15,13 @@ class TimelineEngine extends ChangeNotifier {
 
   double get sceneProgress {
     final scene = currentScene;
-    if (scene == null) return 0;
-    return (_sceneElapsed / scene.durationSeconds).clamp(0, 1);
+    if (scene == null) return 0.0;
+    return (_sceneElapsed / scene.durationSeconds).clamp(0.0, 1.0);
   }
-
-  double get totalDuration =>
-      scenes.fold(0.0, (sum, s) => sum + s.durationSeconds);
 
   void tick(double dt) {
     if (!isPlaying || scenes.isEmpty) return;
     _sceneElapsed += dt * playbackSpeed;
-    currentTime += dt * playbackSpeed;
-
     final scene = currentScene;
     if (scene != null && _sceneElapsed >= scene.durationSeconds) {
       _sceneElapsed = 0;
@@ -37,7 +31,6 @@ class TimelineEngine extends ChangeNotifier {
       } else {
         isPlaying = false;
         currentSceneIndex = 0;
-        currentTime = 0;
         notifyListeners();
       }
     } else {
@@ -58,7 +51,6 @@ class TimelineEngine extends ChangeNotifier {
   void stop() {
     isPlaying = false;
     currentSceneIndex = 0;
-    currentTime = 0;
     _sceneElapsed = 0;
     notifyListeners();
   }
@@ -95,7 +87,7 @@ class TimelineEngine extends ChangeNotifier {
     if (index < 0 || index >= scenes.length) return;
     scenes.removeAt(index);
     if (currentSceneIndex >= scenes.length) {
-      currentSceneIndex = (scenes.length - 1).clamp(0, scenes.length - 1);
+      currentSceneIndex = scenes.isEmpty ? 0 : scenes.length - 1;
     }
     notifyListeners();
   }
@@ -103,13 +95,6 @@ class TimelineEngine extends ChangeNotifier {
   void updateScene(int index, StoryScene scene) {
     if (index < 0 || index >= scenes.length) return;
     scenes[index] = scene;
-    notifyListeners();
-  }
-
-  void reorderScene(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) newIndex -= 1;
-    final scene = scenes.removeAt(oldIndex);
-    scenes.insert(newIndex, scene);
     notifyListeners();
   }
 }
