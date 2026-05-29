@@ -1,67 +1,74 @@
 import 'package:codecraft_ai/video/ai/ai_provider.dart';
 import 'package:codecraft_ai/video/ai/ai_config.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+
+class RateLimitException implements Exception {
+  final String message;
+  const RateLimitException(this.message);
+  @override
+  String toString() => 'RateLimitException: $message';
+}
+
+class AIProviderException implements Exception {
+  final String message;
+  const AIProviderException(this.message);
+  @override
+  String toString() => 'AIProviderException: $message';
+}
 
 class AIManager {
-  static Future<String> generateText(String prompt) async {
-    try {
-      return await _tryGroq(prompt);
-    } catch (_) {
+  static final List<AIProvider> _providers = [];
+
+  static void configure() {
+    _providers.clear();
+    if (AIConfig.groqApiKey.isNotEmpty) {
+      _providers.add(GroqProvider(apiKey: AIConfig.groqApiKey));
+    }
+    if (AIConfig.geminiApiKey.isNotEmpty) {
+      _providers.add(GeminiProvider(apiKey: AIConfig.geminiApiKey));
+    }
+    if (AIConfig.openRouterApiKey.isNotEmpty) {
+      _providers.add(
+        OpenRouterProvider(apiKey: AIConfig.openRouterApiKey),
+      );
+    }
+    if (AIConfig.huggingFaceApiKey.isNotEmpty) {
+      _providers.add(
+        HuggingFaceProvider(apiKey: AIConfig.huggingFaceApiKey),
+      );
+    }
+    if (_providers.isEmpty) {
+      // Free fallback — no key needed
+      _providers.add(
+        OpenRouterProvider(apiKey: 'free'),
+      );
+    }
+  }
+
+  static Future<String> generate(
+    String prompt, {
+    int maxTokens = 2000,
+  }) async {
+    if (_providers.isEmpty) configure();
+
+    for (final provider in _providers) {
       try {
-        return await _tryGemini(prompt);
-      } catch (e) {
-        throw AIException('All AI providers failed: $e');
+        final result = await provider.generate(
+          prompt,
+          maxTokens: maxTokens,
+        );
+        if (result.isNotEmpty) return result;
+      } on RateLimitException {
+        continue;
+      } on AIException catch (e) {
+        if (e.message.contains('429') ||
+            e.message.contains('rate limit')) {
+          continue;
+        }
+        rethrow;
+      } catch (_) {
+        continue;
       }
     }
-  }
-
-  static Future<String> _tryGroq(String prompt) async {
-    if (AIConfig.groqKey.isEmpty) throw AIException('No key');
-    final response = await http.post(
-      Uri.parse('${AIConfig.groqBaseUrl}/chat/completions'),
-      headers: {
-        'Authorization': 'Bearer ${AIConfig.groqKey}',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'model': 'llama3-8b-8192',
-        'messages': [
-          {'role': 'user', 'content': prompt}
-        ],
-        'max_tokens': 500,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['choices'][0]['message']['content'];
-    }
-    throw AIException('Groq failed: ${response.statusCode}');
-  }
-
-  static Future<String> _tryGemini(String prompt) async {
-    if (AIConfig.geminiKey.isEmpty) throw AIException('No key');
-    final response = await http.post(
-      Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/'
-        'models/gemini-pro:generateContent'
-        '?key=${AIConfig.geminiKey}',
-      ),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'contents': [
-          {
-            'parts': [
-              {'text': prompt}
-            ]
-          }
-        ],
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['candidates'][0]['content']['parts'][0]['text'];
-    }
-    throw AIException('Gemini failed: ${response.statusCode}');
+    throw const AIProviderException('All AI providers failed');
   }
 }
