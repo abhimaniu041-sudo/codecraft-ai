@@ -10,55 +10,30 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # ── AI & Network ──
+  # AI & Network
   http: ^1.1.0
 
-  # ── Storage ──
+  # Storage
   shared_preferences: ^2.2.2
   path_provider: ^2.1.1
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
 
-  # ── Image ──
+  # Image
   image_picker: ^1.0.4
-  cached_network_image: ^3.3.1
 
-  # ── Animation ──
+  # Animation
   lottie: ^3.1.0
 
-  # ── Audio ──
+  # Audio
   audioplayers: ^6.0.0
 
-  # ── Firebase ──
-  firebase_core: ^2.27.0
-  cloud_firestore: ^4.15.5
-  firebase_storage: ^11.6.8
-  firebase_auth: ^4.19.4
-
-  # ── Video Export ──
-  ffmpeg_kit_flutter: ^6.0.3
-
-  # ── Utils ──
+  # Utils
   uuid: ^4.3.3
   connectivity_plus: ^5.0.2
-  flutter_cache_manager: ^3.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  hive_generator: ^2.0.1
-  build_runner: ^2.4.8
   flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/characters/hero/
-    - assets/characters/villain/
-    - assets/characters/robot/
-    - assets/characters/dragon/
-    - assets/backgrounds/
-    - assets/fx/
-    - assets/audio/music/
-    - assets/audio/sfx/
-    - assets/lottie/
