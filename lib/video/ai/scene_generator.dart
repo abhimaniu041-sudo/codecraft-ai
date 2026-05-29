@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'package:codecraft_ai/video/ai/ai_manager.dart';
-import 'package:codecraft_ai/video/ai/ai_config.dart';
 
 class SceneGenerator {
   static Future<List<Map<String, dynamic>>> generateScenes(
@@ -9,29 +9,36 @@ class SceneGenerator {
 
     final aiPrompt = '''
 Generate a video scene list for: "$prompt"
-Return JSON array only, no explanation.
-Format: [{"title":"...","description":"...","duration":3}]
-Maximum 5 scenes.
+Return only a JSON array. No explanation.
+Format: [{"title":"Scene Name","description":"What happens","duration":3}]
+Maximum 5 scenes. Duration in seconds (2-8).
 ''';
 
     try {
-      final result = await AIManager.generate(aiPrompt, maxTokens: 1000);
+      final result = await AIManager.generate(
+        aiPrompt,
+        maxTokens: 800,
+      );
       return _parseScenes(result);
-    } catch (e) {
+    } catch (_) {
       return _defaultScenes(prompt);
     }
   }
 
-  static List<Map<String, dynamic>> _parseScenes(String json) {
+  static List<Map<String, dynamic>> _parseScenes(String text) {
     try {
-      // Basic JSON extraction
-      final start = json.indexOf('[');
-      final end = json.lastIndexOf(']');
-      if (start == -1 || end == -1) return [];
-      // Return default for now — add dart:convert if needed
-      return _defaultScenes('');
+      final start = text.indexOf('[');
+      final end = text.lastIndexOf(']');
+      if (start == -1 || end == -1 || end <= start) {
+        return _defaultScenes('');
+      }
+      final jsonStr = text.substring(start, end + 1);
+      final List<dynamic> parsed = jsonDecode(jsonStr);
+      return parsed
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } catch (_) {
-      return [];
+      return _defaultScenes('');
     }
   }
 
@@ -39,17 +46,17 @@ Maximum 5 scenes.
     return [
       {
         'title': 'Opening',
-        'description': topic.isNotEmpty ? topic : 'Introduction scene',
+        'description': topic.isNotEmpty ? topic : 'Introduction',
         'duration': 3,
       },
       {
-        'title': 'Main Content',
-        'description': 'Main story scene',
+        'title': 'Main Scene',
+        'description': 'Main content',
         'duration': 5,
       },
       {
-        'title': 'Closing',
-        'description': 'Ending scene',
+        'title': 'Ending',
+        'description': 'Conclusion',
         'duration': 3,
       },
     ];
