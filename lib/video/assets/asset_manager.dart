@@ -12,69 +12,47 @@ class AssetManager {
   factory AssetManager() => _instance;
   AssetManager._internal();
 
-  static const String _dbKey = 'asset_database';
-  final Map<String, AssetRecord> _localCache = {};
+  static const String _dbKey = 'asset_db_v1';
+  final Map<String, AssetRecord> _cache = {};
   final _uuid = const Uuid();
+  bool _initialized = false;
 
-  // ── Initialize ────────────────────────────────────────
   Future<void> init() async {
-    await _loadFromPrefs();
+    if (_initialized) return;
+    await _load();
+    _initialized = true;
   }
 
-  Future<void> _loadFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_dbKey);
-    if (raw != null) {
-      try {
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_dbKey);
+      if (raw != null) {
         final List data = jsonDecode(raw);
         for (final item in data) {
-          final record = AssetRecord.fromJson(Map<String, dynamic>.from(item));
-          _localCache[record.id] = record;
+          final record =
+              AssetRecord.fromJson(Map<String, dynamic>.from(item));
+          _cache[record.id] = record;
         }
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
   }
 
-  Future<void> _saveToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = _localCache.values.map((r) => r.toJson()).toList();
-    await prefs.setString(_dbKey, jsonEncode(data));
+  Future<void> _save() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = _cache.values.map((r) => r.toJson()).toList();
+      await prefs.setString(_dbKey, jsonEncode(data));
+    } catch (_) {}
   }
 
-  // ── Search assets by tags ─────────────────────────────
-  List<AssetRecord> searchByTags(List<String> tags) {
-    if (tags.isEmpty) return [];
-    final results = <AssetRecord>[];
-    for (final record in _localCache.values) {
-      final matchCount =
-          tags.where((t) => record.tags.contains(t.toLowerCase())).length;
-      if (matchCount > 0) results.add(record);
-    }
-    results.sort((a, b) {
-      final aMatch =
-          tags.where((t) => a.tags.contains(t.toLowerCase())).length;
-      final bMatch =
-          tags.where((t) => b.tags.contains(t.toLowerCase())).length;
-      return bMatch.compareTo(aMatch);
-    });
-    return results;
-  }
-
-  // ── Search by category ────────────────────────────────
-  List<AssetRecord> searchByCategory(String category) {
-    return _localCache.values
-        .where((r) => r.category == category)
-        .toList()
-      ..sort((a, b) => b.usageCount.compareTo(a.usageCount));
-  }
-
-  // ── Check if asset exists ─────────────────────────────
-  AssetRecord? findAsset(List<String> tags, String category) {
-    final matches = _localCache.values.where((r) {
+  AssetRecord? findByTags(List<String> tags, String category) {
+    final lowerTags = tags.map((t) => t.toLowerCase()).toList();
+    final matches = _cache.values.where((r) {
       if (r.category != category) return false;
-      final tagMatches =
-          tags.where((t) => r.tags.contains(t.toLowerCase())).length;
-      return tagMatches >= (tags.length * 0.6).floor();
+      final matched =
+          lowerTags.where((t) => r.tags.contains(t)).length;
+      return matched >= (lowerTags.length * 0.5).ceil();
     }).toList();
 
     if (matches.isEmpty) return null;
@@ -82,12 +60,11 @@ class AssetManager {
     return matches.first;
   }
 
-  // ── Register new asset ────────────────────────────────
-  Future<AssetRecord> registerAsset({
+  Future<AssetRecord> register({
     required String localPath,
     required List<String> tags,
     required String category,
-    required String generationPrompt,
+    required String prompt,
     String? firebaseUrl,
   }) async {
     final record = AssetRecord(
@@ -96,35 +73,35 @@ class AssetManager {
       firebaseUrl: firebaseUrl,
       tags: tags.map((t) => t.toLowerCase()).toList(),
       category: category,
-      generationPrompt: generationPrompt,
+      generationPrompt: prompt,
       createdAt: DateTime.now(),
     );
-    _localCache[record.id] = record;
-    await _saveToPrefs();
+    _cache[record.id] = record;
+    await _save();
     return record;
   }
 
-  // ── Increment usage ───────────────────────────────────
   Future<void> incrementUsage(String id) async {
-    if (_localCache.containsKey(id)) {
-      _localCache[id]!.usageCount++;
-      await _saveToPrefs();
+    if (_cache.containsKey(id)) {
+      _cache[id]!.usageCount++;
+      await _save();
     }
   }
 
-  // ── Download asset from URL ───────────────────────────
-  Future<String?> downloadAsset(String url, String filename) async {
+  Future<String?> downloadToCache(String url, String filename) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final assetsDir = Directory('${dir.path}/assets');
-      if (!assetsDir.existsSync()) assetsDir.createSync(recursive: true);
+      final cacheDir = Directory('${dir.path}/asset_cache');
+      if (!cacheDir.existsSync()) {
+        cacheDir.createSync(recursive: true);
+      }
 
-      final filePath = '${assetsDir.path}/$filename';
+      final filePath = '${cacheDir.path}/$filename';
       final file = File(filePath);
-
       if (file.existsSync()) return filePath;
 
-      final response = await http.get(Uri.parse(url))
+      final response = await http
+          .get(Uri.parse(url))
           .timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
         await file.writeAsBytes(response.bodyBytes);
@@ -137,8 +114,7 @@ class AssetManager {
     }
   }
 
-  // ── Extract tags from prompt ──────────────────────────
-  List<String> extractTags(String prompt) {
+  List<String> extractTagsFromPrompt(String prompt) {
     final keywords = [
       'dragon', 'fire', 'city', 'forest', 'space', 'hero', 'villain',
       'robot', 'wizard', 'ninja', 'warrior', 'princess', 'alien', 'zombie',
@@ -149,7 +125,6 @@ class AssetManager {
     return keywords.where((k) => lower.contains(k)).toList();
   }
 
-  int get totalAssets => _localCache.length;
-
-  List<AssetRecord> get allAssets => _localCache.values.toList();
+  int get totalCount => _cache.length;
+  List<AssetRecord> get all => _cache.values.toList();
 }
