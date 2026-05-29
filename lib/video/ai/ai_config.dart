@@ -1,9 +1,10 @@
 class AIConfig {
-  // Add your Groq API key (already in your app)
-  static const String groqApiKey = 'YOUR_GROQ_API_KEY_HERE';
-
-  // Optional backup keys (leave empty to disable)
-  static const String geminiApiKey = '';
-  static const String openRouterApiKey = '';
-  static const String huggingFaceApiKey = '';
+  static const String groqKey = '';
+  static const String geminiKey = '';
+  static const String openRouterKey = '';
+  static const String huggingFaceKey = '';
+  static const String openRouterBaseUrl =
+      'https://openrouter.ai/api/v1';
+  static const String groqBaseUrl =
+      'https://api.groq.com/openai/v1';
 }
