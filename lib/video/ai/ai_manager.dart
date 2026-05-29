@@ -8,9 +8,8 @@ class AIManager {
 
   final List<AIProvider> _providers = [];
   int _currentIndex = 0;
-  final Map<String, String> _cache = {};
+  final Map<String, String> _responseCache = {};
 
-  // ── Configure providers ───────────────────────────────
   void configure({
     required String groqKey,
     String geminiKey = '',
@@ -18,7 +17,10 @@ class AIManager {
     String huggingFaceKey = '',
   }) {
     _providers.clear();
-    _providers.add(GroqProvider(apiKey: groqKey));
+
+    if (groqKey.isNotEmpty) {
+      _providers.add(GroqProvider(apiKey: groqKey));
+    }
     if (geminiKey.isNotEmpty) {
       _providers.add(GeminiProvider(apiKey: geminiKey));
     }
@@ -28,72 +30,60 @@ class AIManager {
     if (huggingFaceKey.isNotEmpty) {
       _providers.add(HuggingFaceProvider(apiKey: huggingFaceKey));
     }
+
     _currentIndex = 0;
   }
 
-  // ── Main generation with auto-fallback ────────────────
   Future<String> generate(
     String prompt, {
     int maxTokens = 2000,
     String systemPrompt = '',
     bool useCache = true,
   }) async {
-    final fullPrompt = systemPrompt.isNotEmpty
-        ? '$systemPrompt\n\n$prompt'
-        : prompt;
+    final cacheKey = '${prompt.hashCode}_$maxTokens';
 
-    // Check cache first
-    if (useCache && _cache.containsKey(fullPrompt)) {
-      return _cache[fullPrompt]!;
+    if (useCache && _responseCache.containsKey(cacheKey)) {
+      return _responseCache[cacheKey]!;
     }
 
     if (_providers.isEmpty) {
-      throw AIException('No AI providers configured');
+      throw AIProviderException('No AI providers configured');
     }
 
-    int attempts = 0;
-    int startIndex = _currentIndex;
+    final fullPrompt =
+        systemPrompt.isNotEmpty ? '$systemPrompt\n\n$prompt' : prompt;
 
-    while (attempts < _providers.length) {
-      final provider = _providers[_currentIndex];
+    for (int attempt = 0; attempt < _providers.length; attempt++) {
+      final index = (_currentIndex + attempt) % _providers.length;
+      final provider = _providers[index];
+
       try {
         final result = await provider.generate(
           fullPrompt,
           maxTokens: maxTokens,
         );
         if (result.isNotEmpty) {
-          // Cache successful result
-          if (useCache) _cache[fullPrompt] = result;
+          if (useCache) _responseCache[cacheKey] = result;
           return result;
         }
-        _switchToNext();
-        attempts++;
       } on RateLimitException {
-        _switchToNext();
-        attempts++;
-      } on AIException {
-        _switchToNext();
-        attempts++;
+        continue;
+      } on AIProviderException {
+        continue;
       } on TimeoutException {
-        _switchToNext();
-        attempts++;
+        continue;
       } catch (_) {
-        _switchToNext();
-        attempts++;
+        continue;
       }
     }
 
-    throw AIException('All AI providers failed');
-  }
-
-  void _switchToNext() {
-    _currentIndex = (_currentIndex + 1) % _providers.length;
+    throw AIProviderException('All AI providers failed');
   }
 
   String get currentProviderName =>
       _providers.isNotEmpty ? _providers[_currentIndex].name : 'None';
 
-  void clearCache() => _cache.clear();
+  void clearCache() => _responseCache.clear();
 
   int get providerCount => _providers.length;
 }
