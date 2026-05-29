@@ -1,50 +1,64 @@
 import 'dart:convert';
 import '../models/video_models.dart';
 import 'ai_manager.dart';
+import 'ai_config.dart';
 
 class SceneGenerator {
-  final AIManager _ai = AIManager();
-
-  // ── Generate full story ───────────────────────────────
-  Future<List<StoryScene>> generateStory(String prompt) async {
-    final result = await _ai.generate(
-      _buildStoryPrompt(prompt),
-      systemPrompt:
-          'You are a cinematic AI cartoon director. Return ONLY valid JSON array. No markdown. No explanation.',
-      maxTokens: 3000,
+  SceneGenerator() {
+    AIManager().configure(
+      groqKey: AIConfig.groqApiKey,
+      geminiKey: AIConfig.geminiApiKey,
+      openRouterKey: AIConfig.openRouterApiKey,
+      huggingFaceKey: AIConfig.huggingFaceApiKey,
     );
-
-    return _parseScenes(result);
   }
 
-  // ── Parse scenes safely ───────────────────────────────
+  final AIManager _ai = AIManager();
+
+  Future<List<StoryScene>> generateStory(String prompt) async {
+    try {
+      final result = await _ai.generate(
+        _buildPrompt(prompt),
+        systemPrompt:
+            'You are a cinematic AI cartoon director. Return ONLY valid JSON array. No markdown. No explanation.',
+        maxTokens: 3000,
+      );
+      return _parseScenes(result);
+    } catch (_) {
+      return _fallbackScenes();
+    }
+  }
+
   List<StoryScene> _parseScenes(String raw) {
     try {
-      String clean = raw.replaceAll('```json', '').replaceAll('```', '').trim();
+      final clean =
+          raw.replaceAll('```json', '').replaceAll('```', '').trim();
       final start = clean.indexOf('[');
       final end = clean.lastIndexOf(']');
       if (start == -1 || end == -1) return _fallbackScenes();
 
       final List data = jsonDecode(clean.substring(start, end + 1));
       final scenes = <StoryScene>[];
+
       for (int i = 0; i < data.length; i++) {
         final s = Map<String, dynamic>.from(data[i]);
         s['id'] = '${DateTime.now().millisecondsSinceEpoch}_$i';
         scenes.add(StoryScene.fromJson(s));
       }
+
       return scenes.isNotEmpty ? scenes : _fallbackScenes();
     } catch (_) {
       return _fallbackScenes();
     }
   }
 
-  // ── Fallback scenes if AI fails ───────────────────────
   List<StoryScene> _fallbackScenes() {
     return [
       StoryScene(
-        id: DateTime.now().toString(),
+        id: '${DateTime.now().millisecondsSinceEpoch}_0',
         background: BackgroundType.city,
         timeOfDay: SceneTimeOfDay.day,
+        weather: WeatherType.none,
         characters: [
           SceneCharacter(
             characterId: 'hero',
@@ -60,8 +74,9 @@ class SceneGenerator {
       ),
       StoryScene(
         id: '${DateTime.now().millisecondsSinceEpoch}_1',
-        background: BackgroundType.city,
-        timeOfDay: SceneTimeOfDay.sunset,
+        background: BackgroundType.cyberpunk,
+        timeOfDay: SceneTimeOfDay.night,
+        weather: WeatherType.none,
         characters: [
           SceneCharacter(
             characterId: 'hero',
@@ -73,7 +88,7 @@ class SceneGenerator {
           SceneCharacter(
             characterId: 'villain',
             state: 'angry',
-            positionX: 0.7,
+            positionX: 0.72,
             positionY: 0.62,
             facingRight: false,
             dialogue: 'You cannot stop me!',
@@ -84,11 +99,28 @@ class SceneGenerator {
         cameraEffect: CameraEffect.shake,
         effects: [ParticleEffectType.explosion],
       ),
+      StoryScene(
+        id: '${DateTime.now().millisecondsSinceEpoch}_2',
+        background: BackgroundType.city,
+        timeOfDay: SceneTimeOfDay.sunset,
+        weather: WeatherType.none,
+        characters: [
+          SceneCharacter(
+            characterId: 'hero',
+            state: 'victory',
+            positionX: 0.5,
+            positionY: 0.62,
+            dialogue: 'The city is safe!',
+          ),
+        ],
+        narration: 'Peace is restored.',
+        durationSeconds: 4,
+        cameraEffect: CameraEffect.zoomOut,
+      ),
     ];
   }
 
-  // ── Build story prompt ────────────────────────────────
-  String _buildStoryPrompt(String prompt) {
+  String _buildPrompt(String prompt) {
     return '''Create 6 cinematic cartoon scenes for: "$prompt"
 
 Return ONLY valid JSON array:
@@ -116,15 +148,13 @@ Return ONLY valid JSON array:
   }
 ]
 
-backgrounds: city,cyberpunk,forest,space,underwater,volcano,castle,battlefield,beach,snow,desert,jungle,fantasy,school,laboratory
+backgrounds: city,cyberpunk,forest,space,underwater,volcano,castle,battlefield,beach,snow,desert,jungle,fantasy
 timeOfDay: day,sunset,night
 weather: none,rain,snow,fog
 characterIds: hero,villain,robot,wizard,ninja,princess,warrior,alien,zombie,dragon
 states: idle,walk,run,attack,jump,fly,talk,angry,happy,sad,victory,death,cast,defend
 cameraEffect: none,shake,zoomIn,zoomOut,pan
-effects: fire,smoke,explosion,magic,sparks,rain,snow
-transitions: fade,flash,wipe,zoom,none
-
-Make scenes cinematic and dramatic. Vary backgrounds and character states. Include action and dialogue.''';
+effects: fire,smoke,explosion,magic,sparks
+transitions: fade,flash,wipe,zoom,none''';
   }
 }
