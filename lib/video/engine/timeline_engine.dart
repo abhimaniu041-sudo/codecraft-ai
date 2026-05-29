@@ -6,7 +6,7 @@ class TimelineEngine extends ChangeNotifier {
   int currentSceneIndex = 0;
   bool isPlaying = false;
   double playbackSpeed = 1.0;
-  double _sceneElapsed = 0.0;
+  double _elapsed = 0.0;
 
   StoryScene? get currentScene =>
       scenes.isNotEmpty && currentSceneIndex < scenes.length
@@ -16,26 +16,15 @@ class TimelineEngine extends ChangeNotifier {
   double get sceneProgress {
     final scene = currentScene;
     if (scene == null) return 0.0;
-    return (_sceneElapsed / scene.durationSeconds).clamp(0.0, 1.0);
-  }
-
-  double get totalProgress {
-    if (scenes.isEmpty) return 0.0;
-    double total = scenes.fold(0.0, (s, sc) => s + sc.durationSeconds);
-    double elapsed = 0.0;
-    for (int i = 0; i < currentSceneIndex; i++) {
-      elapsed += scenes[i].durationSeconds;
-    }
-    elapsed += _sceneElapsed;
-    return (elapsed / total).clamp(0.0, 1.0);
+    return (_elapsed / scene.durationSeconds).clamp(0.0, 1.0);
   }
 
   void tick(double dt) {
     if (!isPlaying || scenes.isEmpty) return;
-    _sceneElapsed += dt * playbackSpeed;
+    _elapsed += dt * playbackSpeed;
     final scene = currentScene;
-    if (scene != null && _sceneElapsed >= scene.durationSeconds) {
-      _sceneElapsed = 0;
+    if (scene != null && _elapsed >= scene.durationSeconds) {
+      _elapsed = 0;
       if (currentSceneIndex < scenes.length - 1) {
         currentSceneIndex++;
         notifyListeners();
@@ -62,21 +51,21 @@ class TimelineEngine extends ChangeNotifier {
   void stop() {
     isPlaying = false;
     currentSceneIndex = 0;
-    _sceneElapsed = 0;
+    _elapsed = 0;
     notifyListeners();
   }
 
   void jumpToScene(int index) {
     if (scenes.isEmpty) return;
     currentSceneIndex = index.clamp(0, scenes.length - 1);
-    _sceneElapsed = 0;
+    _elapsed = 0;
     notifyListeners();
   }
 
   void nextScene() {
     if (currentSceneIndex < scenes.length - 1) {
       currentSceneIndex++;
-      _sceneElapsed = 0;
+      _elapsed = 0;
       notifyListeners();
     }
   }
@@ -84,7 +73,7 @@ class TimelineEngine extends ChangeNotifier {
   void prevScene() {
     if (currentSceneIndex > 0) {
       currentSceneIndex--;
-      _sceneElapsed = 0;
+      _elapsed = 0;
       notifyListeners();
     }
   }
@@ -106,13 +95,6 @@ class TimelineEngine extends ChangeNotifier {
   void updateScene(int index, StoryScene scene) {
     if (index < 0 || index >= scenes.length) return;
     scenes[index] = scene;
-    notifyListeners();
-  }
-
-  void reorderScenes(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) newIndex -= 1;
-    final scene = scenes.removeAt(oldIndex);
-    scenes.insert(newIndex, scene);
     notifyListeners();
   }
 }
