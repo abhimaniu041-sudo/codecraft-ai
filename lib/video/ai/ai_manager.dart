@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:codecraft_ai/video/ai/ai_provider.dart';
 import 'package:codecraft_ai/video/ai/ai_config.dart';
+import 'package:http/http.dart' as http;
 
 class RateLimitException implements Exception {
   final String message;
@@ -16,6 +18,7 @@ class AIProviderException implements Exception {
 }
 
 class AIManager {
+  static bool _configured = false;
   static final List<AIProvider> _providers = [];
 
   static void configure() {
@@ -37,19 +40,20 @@ class AIManager {
       );
     }
     if (_providers.isEmpty) {
-      // Free fallback — no key needed
       _providers.add(
-        OpenRouterProvider(apiKey: 'free'),
+        const OpenRouterProvider(apiKey: 'free'),
       );
     }
+    _configured = true;
   }
 
   static Future<String> generate(
     String prompt, {
     int maxTokens = 2000,
   }) async {
-    if (_providers.isEmpty) configure();
+    if (!_configured || _providers.isEmpty) configure();
 
+    Exception? lastError;
     for (final provider in _providers) {
       try {
         final result = await provider.generate(
@@ -57,18 +61,13 @@ class AIManager {
           maxTokens: maxTokens,
         );
         if (result.isNotEmpty) return result;
-      } on RateLimitException {
-        continue;
-      } on AIException catch (e) {
-        if (e.message.contains('429') ||
-            e.message.contains('rate limit')) {
-          continue;
-        }
-        rethrow;
-      } catch (_) {
+      } catch (e) {
+        lastError = e is Exception ? e : Exception(e.toString());
         continue;
       }
     }
-    throw const AIProviderException('All AI providers failed');
+    throw AIProviderException(
+      'All AI providers failed: ${lastError?.toString() ?? "unknown"}',
+    );
   }
 }
