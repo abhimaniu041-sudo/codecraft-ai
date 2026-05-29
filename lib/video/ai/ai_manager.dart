@@ -1,89 +1,67 @@
-import 'dart:async';
-import 'ai_provider.dart';
+import 'package:codecraft_ai/video/ai/ai_provider.dart';
+import 'package:codecraft_ai/video/ai/ai_config.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AIManager {
-  static final AIManager _instance = AIManager._internal();
-  factory AIManager() => _instance;
-  AIManager._internal();
-
-  final List<AIProvider> _providers = [];
-  int _currentIndex = 0;
-  final Map<String, String> _responseCache = {};
-
-  void configure({
-    required String groqKey,
-    String geminiKey = '',
-    String openRouterKey = '',
-    String huggingFaceKey = '',
-  }) {
-    _providers.clear();
-
-    if (groqKey.isNotEmpty) {
-      _providers.add(GroqProvider(apiKey: groqKey));
-    }
-    if (geminiKey.isNotEmpty) {
-      _providers.add(GeminiProvider(apiKey: geminiKey));
-    }
-    if (openRouterKey.isNotEmpty) {
-      _providers.add(OpenRouterProvider(apiKey: openRouterKey));
-    }
-    if (huggingFaceKey.isNotEmpty) {
-      _providers.add(HuggingFaceProvider(apiKey: huggingFaceKey));
-    }
-
-    _currentIndex = 0;
-  }
-
-  Future<String> generate(
-    String prompt, {
-    int maxTokens = 2000,
-    String systemPrompt = '',
-    bool useCache = true,
-  }) async {
-    final cacheKey = '${prompt.hashCode}_$maxTokens';
-
-    if (useCache && _responseCache.containsKey(cacheKey)) {
-      return _responseCache[cacheKey]!;
-    }
-
-    if (_providers.isEmpty) {
-      throw AIProviderException('No AI providers configured');
-    }
-
-    final fullPrompt =
-        systemPrompt.isNotEmpty ? '$systemPrompt\n\n$prompt' : prompt;
-
-    for (int attempt = 0; attempt < _providers.length; attempt++) {
-      final index = (_currentIndex + attempt) % _providers.length;
-      final provider = _providers[index];
-
+  static Future<String> generateText(String prompt) async {
+    try {
+      return await _tryGroq(prompt);
+    } catch (_) {
       try {
-        final result = await provider.generate(
-          fullPrompt,
-          maxTokens: maxTokens,
-        );
-        if (result.isNotEmpty) {
-          if (useCache) _responseCache[cacheKey] = result;
-          return result;
-        }
-      } on RateLimitException {
-        continue;
-      } on AIProviderException {
-        continue;
-      } on TimeoutException {
-        continue;
-      } catch (_) {
-        continue;
+        return await _tryGemini(prompt);
+      } catch (e) {
+        throw AIException('All AI providers failed: $e');
       }
     }
-
-    throw AIProviderException('All AI providers failed');
   }
 
-  String get currentProviderName =>
-      _providers.isNotEmpty ? _providers[_currentIndex].name : 'None';
+  static Future<String> _tryGroq(String prompt) async {
+    if (AIConfig.groqKey.isEmpty) throw AIException('No key');
+    final response = await http.post(
+      Uri.parse('${AIConfig.groqBaseUrl}/chat/completions'),
+      headers: {
+        'Authorization': 'Bearer ${AIConfig.groqKey}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'model': 'llama3-8b-8192',
+        'messages': [
+          {'role': 'user', 'content': prompt}
+        ],
+        'max_tokens': 500,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['choices'][0]['message']['content'];
+    }
+    throw AIException('Groq failed: ${response.statusCode}');
+  }
 
-  void clearCache() => _responseCache.clear();
-
-  int get providerCount => _providers.length;
+  static Future<String> _tryGemini(String prompt) async {
+    if (AIConfig.geminiKey.isEmpty) throw AIException('No key');
+    final response = await http.post(
+      Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/'
+        'models/gemini-pro:generateContent'
+        '?key=${AIConfig.geminiKey}',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt}
+            ]
+          }
+        ],
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['candidates'][0]['content']['parts'][0]['text'];
+    }
+    throw AIException('Gemini failed: ${response.statusCode}');
+  }
 }
