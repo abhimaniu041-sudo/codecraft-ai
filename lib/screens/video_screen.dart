@@ -19,7 +19,11 @@ import '../video/engine/export_engine.dart';
 // initState mein add karo:
 @override
 void initState() {
+  @override
+void initState() {
   super.initState();
+  // your init code here
+}
 
   // Initialize AI Manager with all providers
   AIManager().configure(
